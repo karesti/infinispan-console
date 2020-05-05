@@ -33,6 +33,7 @@ const DetailCache: React.FunctionComponent<any> = props => {
     undefined
   );
   const [xSite, setXSite] = useState<XSite[]>([]);
+  const [size, setSize] = useState<number>(0);
   const [activeTabKey, setActiveTabKey] = useState('0');
   const [showEntries, setShowEntries] = useState(false);
   const [showConfig, setShowConfig] = useState(false);
@@ -44,6 +45,7 @@ const DetailCache: React.FunctionComponent<any> = props => {
       setDetail(detailedCache);
       setActiveTabKey('0');
       setShowEntries(true);
+      setSize(detailedCache.size);
       if (detailedCache.features.hasRemoteBackup) {
         cacheService.retrieveXSites(cacheName).then(xsites => {
           setXSite(xsites);
@@ -116,15 +118,16 @@ const DetailCache: React.FunctionComponent<any> = props => {
     return (
       <React.Fragment>
         <DataToolbar id="cache-detail-header">
-          <DataToolbarContent style={{ paddingLeft: 0 }}>
+          <DataToolbarContent style={{paddingLeft: 0}}>
             <DataToolbarItem>
               <TextContent>
                 <Text component={TextVariants.h1}>{detail.name}</Text>
               </TextContent>
             </DataToolbarItem>
             <DataToolbarItem>
-              <CacheTypeBadge cacheType={detail.type} small={false} />
+              <CacheTypeBadge cacheType={detail.type} small={false}/>
             </DataToolbarItem>
+            <DataToolbarItem>Size: {displayUtils.formatNumber(Number(size))}</DataToolbarItem>
             <DataToolbarItem>
               <TextContent>
                 <Text component={TextVariants.h4}>

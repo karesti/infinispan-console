@@ -278,6 +278,33 @@ class CacheService {
           )
       );
   }
+
+  /**
+   * Size of the cache
+   * @param cacheName, the name of the cache
+   */
+  public async size(cacheName: string) :Promise<Either<ActionResponse, number>> {
+   return utils.restCall(
+      this.endpoint + '/caches/' + cacheName + '?action=size',
+      'GET'
+    ).then(response => {
+      if (response.ok) {
+        return response.text();
+      }
+      throw response;
+    }).then(data => right(data))
+     .catch(err => {
+        if (err instanceof TypeError) {
+          return left(<ActionResponse>{message: err.message, success: false});
+        }
+        return err
+          .text()
+          .then(
+            errorMessage =>
+              left(<ActionResponse>{message: errorMessage, success: false}));
+      });
+  }
+
   /**
    * If the response is ok, the cache has been created
    *
