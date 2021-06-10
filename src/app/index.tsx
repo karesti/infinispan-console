@@ -7,6 +7,7 @@ import '@app/app.css';
 import { KeycloakService } from '@services/keycloakService';
 import { ConsoleServices } from '@services/ConsoleServices';
 import { UserContextProvider } from '@app/providers/UserContextProvider';
+import {ContainerDataProvider} from "@app/providers/CacheManagerContextProvider";
 
 const App = () => {
   const [init, setInit] = useState<
@@ -77,9 +78,11 @@ const App = () => {
     return (
       <Router basename="/console">
         <UserContextProvider>
+          <ContainerDataProvider>
           <AppLayout init={init}>
             <AppRoutes init={init} />
           </AppLayout>
+          </ContainerDataProvider>
         </UserContextProvider>
       </Router>
     );

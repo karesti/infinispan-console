@@ -34,7 +34,7 @@ export class ContainerService {
         left(
           this.utils.mapError(
             err,
-            'Cannot connect. Check the navigator logs for errors.'
+            'Cannot connect. Check the browser logs for errors.'
           )
         )
       );

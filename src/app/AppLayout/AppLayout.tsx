@@ -36,6 +36,7 @@ import {ConsoleServices} from "@services/ConsoleServices";
 import {useConnectedUser} from "@app/services/userManagementHook";
 import {KeycloakService} from "@services/keycloakService";
 import {InfoCircleIcon} from "@patternfly/react-icons";
+import {useDataContainer} from "@app/services/dataContainerHooks";
 
 interface IAppLayout {
   init: string;
@@ -44,6 +45,7 @@ interface IAppLayout {
 
 const AppLayout: React.FunctionComponent<IAppLayout> = ({ init, children }) => {
   const history = useHistory();
+  const {cm} = useDataContainer();
   const {connectedUser, notSecured, logUser} = useConnectedUser();
   const [isWelcomePage, setIsWelcomePage] = useState(ConsoleServices.isWelcomePage());
   const logoProps = {
@@ -89,7 +91,7 @@ const AppLayout: React.FunctionComponent<IAppLayout> = ({ init, children }) => {
         </ToolbarItem>
         <ToolbarItem style={{marginTop: 0}}>
           <TextContent>
-            <Text component={TextVariants.h2}>{t('layout.console-name')}</Text>
+            <Text component={TextVariants.h2}>{t('layout.console-name')} {cm?.local_site}</Text>
           </TextContent>
         </ToolbarItem>
       </ToolbarContent>

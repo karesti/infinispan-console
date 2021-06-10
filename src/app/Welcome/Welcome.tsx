@@ -123,7 +123,7 @@ const Welcome = (props) => {
 
     if (authState == 'SERVER_ERROR') {
       return (
-        <Alert variant="danger" title="Server error. Check navigator logs" />
+        <Alert variant="danger" title="Server error. Check browser logs" />
       );
     }
 

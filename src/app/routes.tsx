@@ -2,7 +2,7 @@ import * as React from 'react';
 import { useEffect } from 'react';
 import { Route, RouteComponentProps, Switch } from 'react-router-dom';
 import { accessibleRouteChangeHandler } from '@app/utils/utils';
-import { CacheManagerPage } from '@app/CacheManagers/CacheMangerPage';
+import { CacheManagers } from '@app/CacheManagers/CacheManagers';
 import { NotFound } from '@app/NotFound/NotFound';
 import {
   LastLocationProvider,
@@ -82,7 +82,7 @@ const routes: IAppRoute[] = [
     menu: false,
   },
   {
-    component: CacheManagerPage,
+    component: CacheManagers,
     exact: true,
     label: 'Data Container',
     path: '/',
