@@ -26,7 +26,6 @@ export class ProtobufService {
         this.endpoint + '/' + name,
         create ? 'POST' : 'PUT',
         undefined,
-        undefined,
         schema
       )
       .then((response) => {
@@ -63,19 +62,12 @@ export class ProtobufService {
   /**
    * Delete schema
    */
-  public async delete(name: string): Promise<ActionResponse> {
-    return this.utils
-      .restCall(this.endpoint + '/' + name, 'DELETE')
-      .then((response) => {
-        if (response.ok) {
-          return <ActionResponse>{
-            message: 'Schema ' + name + ' has been deleted',
-            success: true,
-          };
-        }
-        throw response;
-      })
-      .catch((err) => this.handleProtobufRestError(err));
+  public async delete(schemaName: string): Promise<ActionResponse> {
+    return this.utils.delete({
+      url: this.endpoint,
+      successMessage: `Schema ${schemaName} has been deleted.`,
+      errorMessage: `Unexpected error happened when deleting schema ${schemaName}.`
+    });
   }
 
   /**

@@ -84,9 +84,10 @@ export class CountersService {
    * @param name, counter to be deleted
    */
   public delete(name: string): Promise<ActionResponse> {
-    return this.utils.handleCRUDActionResponse(
-      'Counter ' + name + ' has been deleted',
-      this.utils.restCall(this.endpoint + '/' + name, 'DELETE')
-    );
+    return this.utils.delete({
+      url: this.endpoint + '/' + name,
+      successMessage: `Counter ${name} has been deleted.`,
+      errorMessage: `Unexpected error deleting the counter ${name}.`
+    });
   }
 }

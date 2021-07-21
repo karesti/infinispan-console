@@ -283,41 +283,10 @@ export class CrossSiteReplicationService {
         '?action=' +
         action;
     }
-    return this.utils
-      .restCall(url, 'POST')
-      .then((response) => {
-        if (response.ok) {
-          return <ActionResponse>{
-            message:
-              'Operation ' +
-              actionLabel +
-              ' on site ' +
-              siteName +
-              ' has started',
-            success: true,
-          };
-        }
-        throw response;
-      })
-      .catch((err) => {
-        if (err instanceof TypeError) {
-          return <ActionResponse>{ message: err.message, success: false };
-        }
-
-        return err.text().then((errorMessage) => {
-          if (errorMessage == '') {
-            errorMessage =
-              'An error happened during the operation ' +
-              actionLabel +
-              ' started on ' +
-              siteName;
-          }
-
-          return <ActionResponse>{
-            message: errorMessage,
-            success: false,
-          };
-        });
-      });
+    return this.utils.post({
+      url: url,
+      successMessage: `Operation ${actionLabel} on site ${siteName} has started.`,
+      errorMessage: `An error happened during the operation ${actionLabel} started on ${siteName}.`
+    });
   }
 }

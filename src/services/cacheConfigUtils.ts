@@ -160,4 +160,38 @@ export class CacheConfigUtils {
 
     return contentTypes;
   }
+
+  public static isJSONObject(value: string): boolean {
+    try {
+      JSON.parse(value);
+      return true;
+    } catch (err) {
+      return false;
+    }
+  }
+
+  public static isProtobufBasicType(protobufType: string | undefined): boolean {
+    if (protobufType == undefined) {
+      return false;
+    }
+
+    switch (protobufType) {
+      case 'string':
+      case 'float':
+      case 'double':
+      case 'int32':
+      case 'uint32':
+      case 'sint32':
+      case 'fixed32':
+      case 'sfixed32':
+      case 'int64':
+      case 'uint64':
+      case 'sint64':
+      case 'fixed64':
+      case 'sfixed64':
+      case 'bool':
+        return true;
+    }
+    return false;
+  }
 }

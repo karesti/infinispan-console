@@ -90,6 +90,7 @@ const CacheDetailProvider = ({ children }) => {
              if (eitherEntries.isRight()) {
                setCacheEntries(eitherEntries.value);
              } else {
+               console.log(eitherEntries);
                setErrorEntries(eitherEntries.value.message);
              }
            })

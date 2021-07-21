@@ -40,8 +40,7 @@ export class SearchService {
           maxResults +
           '&offset=' +
           offset * maxResults,
-        'GET',
-        'application/json;q=0.8'
+        'GET'
       )
       .then((response) => {
         if (response.ok) {
@@ -167,47 +166,11 @@ export class SearchService {
    * @param cacheName
    */
   public async purgeIndexes(cacheName: string): Promise<ActionResponse> {
-    return this.utils
-      .restCall(
-        this.endpoint +
-          encodeURIComponent(cacheName) +
-          '/search/indexes?action=clear',
-        'POST'
-      )
-      .then((response) => {
-        if (response.ok) {
-          return <ActionResponse>{
-            message: 'Index of cache ' + cacheName + ' cleared.',
-            success: true,
-          };
-        }
-        throw response;
-      })
-      .catch((err) => {
-        let genericError =
-          'An error occurred when clearing the index for cache ' + cacheName;
-        if (err instanceof TypeError) {
-          return <ActionResponse>{ message: err.message, success: false };
-        }
-
-        if (err instanceof Response) {
-          return err.text().then((errorMessage) => {
-            if (errorMessage == '') {
-              errorMessage = genericError;
-            }
-
-            return <ActionResponse>{
-              message: errorMessage,
-              success: false,
-            };
-          });
-        }
-
-        return <ActionResponse>{
-          message: genericError,
-          success: false,
-        };
-      });
+    return this.utils.post({
+      url: this.endpoint + encodeURIComponent(cacheName) + '/search/indexes?action=clear',
+      successMessage: `Index of cache ${cacheName} cleared.`,
+      errorMessage: `An error occurred when clearing the index for cache ${cacheName}.`
+    });
   }
 
   /**
@@ -216,48 +179,11 @@ export class SearchService {
    * @param cacheName
    */
   public async reindex(cacheName: string): Promise<ActionResponse> {
-    return this.utils
-      .restCall(
-        this.endpoint +
-          encodeURIComponent(cacheName) +
-          '/search/indexes?action=mass-index&mode=async',
-        'POST'
-      )
-      .then((response) => {
-        if (response.ok) {
-          return <ActionResponse>{
-            message: 'Indexing cache ' + cacheName + ' started.',
-            success: true,
-          };
-        }
-        throw response;
-      })
-      .catch((err) => {
-        let genericError =
-          'An error occurred when starting to rebuild the index for cache ' +
-          cacheName;
-        if (err instanceof TypeError) {
-          return <ActionResponse>{ message: err.message, success: false };
-        }
-
-        if (err instanceof Response) {
-          return err.text().then((errorMessage) => {
-            if (errorMessage == '') {
-              errorMessage = genericError;
-            }
-
-            return <ActionResponse>{
-              message: errorMessage,
-              success: false,
-            };
-          });
-        }
-
-        return <ActionResponse>{
-          message: genericError,
-          success: false,
-        };
-      });
+    return this.utils.post({
+      url: this.endpoint + encodeURIComponent(cacheName) + '/search/indexes?action=mass-index&mode=async',
+      successMessage: `Reindexing cache ${cacheName} started.`,
+      errorMessage: `An error occurred when starting to rebuild the index for cache ${cacheName}.`
+    });
   }
 
   /**
@@ -266,23 +192,10 @@ export class SearchService {
    * @param cacheName
    */
   public async clearQueryStats(cacheName: string): Promise<ActionResponse> {
-    return this.utils
-      .restCall(
-        this.endpoint +
-          encodeURIComponent(cacheName) +
-          '/search/stats?action=clear',
-        'POST'
-      )
-      .then((response) => {
-        let message = '';
-        if (response.ok) {
-          message = 'Query statistics of cache ' + cacheName + ' cleared.';
-        } else {
-          message = 'Cannot clear query statistics of cache ' + cacheName;
-        }
-
-        return <ActionResponse>{ message: message, success: response.ok };
-      })
-      .catch((err) => <ActionResponse>{ message: err.message, success: false });
+    return this.utils.post({
+      url: this.endpoint + encodeURIComponent(cacheName) + '/search/stats?action=clear',
+      successMessage: `Query statistics of cache ${cacheName} cleared.`,
+      errorMessage: `Cannot clear query statistics of cache ${cacheName}.`
+    });
   }
 }

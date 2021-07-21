@@ -74,8 +74,32 @@ export enum Flags {
 export class RestUtils {
   private authenticationService: AuthenticationService;
 
-  constructor(authenticationService: AuthenticationService) {
-    this.authenticationService = authenticationService;
+  public get(url: string, transformer: (json: JSON) => {}, customHeaders?: Headers) : Promise<any> {
+    const promise: Promise<Response> =  this.restCall(url, 'GET', customHeaders)
+    return promise
+      .then((response) => {
+        if (response.ok) {
+          return response.json();
+        }
+        return response.text().then(text => {throw text;});
+      }).then(json => {
+        return transformer(json);
+      });
+  }
+
+  public delete(deleteCall: ServiceCall) : Promise<ActionResponse> {
+    let responsePromise = this.restCall(deleteCall.url, 'DELETE', deleteCall.customHeaders);
+    return this.handleCRUDActionResponse(deleteCall.successMessage, deleteCall.errorMessage, responsePromise);
+  }
+
+  public put(putCall: ServiceCall) : Promise<ActionResponse> {
+    let responsePromise = this.restCall(putCall.url, 'PUT', putCall.customHeaders, putCall.body);
+    return this.handleCRUDActionResponse(putCall.successMessage, putCall.errorMessage, responsePromise);
+  }
+
+  public post(postCall: ServiceCall) : Promise<ActionResponse> {
+     let responsePromise = this.restCall(postCall.url, 'POST', postCall.customHeaders, postCall.body);
+     return this.handleCRUDActionResponse(postCall.successMessage, postCall.errorMessage, responsePromise);
   }
 
   /**
@@ -87,16 +111,15 @@ export class RestUtils {
   public restCall(
     url: string,
     method: string,
-    accept?: string,
     customHeaders?: Headers,
     body?: string
   ): Promise<Response> {
     let headers = customHeaders;
     if (!headers) {
       headers = this.createAuthenticatedHeader();
-      if (accept && accept.length > 0) {
-        headers.append('Accept', accept);
-      }
+      // if (accept && accept.length > 0) {
+      //   // headers.append('Accept', '');
+      // }
     }
     let fetchOptions: RequestInit = {
       method: method,
@@ -107,6 +130,10 @@ export class RestUtils {
       fetchOptions['body'] = body;
     }
     return fetch(url, fetchOptions);
+  }
+
+  constructor(authenticationService: AuthenticationService) {
+    this.authenticationService = authenticationService;
   }
 
   public createAuthenticatedHeader = (): Headers => {
@@ -120,15 +147,6 @@ export class RestUtils {
     return headers;
   };
 
-  public static isJSONObject(value: string): boolean {
-    try {
-      JSON.parse(value);
-      return true;
-    } catch (err) {
-      return false;
-    }
-  }
-
   /**
    * Handle a crud op request result
    *
@@ -136,8 +154,9 @@ export class RestUtils {
    * @param successMessage
    * @param response
    */
-  public async handleCRUDActionResponse(
+  private async handleCRUDActionResponse(
     successMessage: string,
+    errorMessage: string,
     response: Promise<Response>
   ): Promise<ActionResponse> {
     return response
@@ -145,38 +164,22 @@ export class RestUtils {
         if (response.ok) {
           return response.text();
         }
-        throw response;
+        if (response.status == 403) {
+          throw 'Unauthorized action.';
+        }
+        return response.text().then(text => {throw text;});
       })
-      .then((text) => {
+      .then((message) => {
         return <ActionResponse>{
-          message: text == '' ? successMessage : text,
+          message: successMessage,
           success: true,
         };
       })
-      .catch((err) => {
-        if (err instanceof TypeError) {
-          return <ActionResponse>{ message: err.message, success: false };
-        }
-
-        if (err instanceof Response) {
-          return err.text().then(
-            (errorMessage) =>
-              <ActionResponse>{
-                message: errorMessage ? errorMessage : err.statusText,
-                success: false,
-              }
-          );
-        }
-        return err
-          .text()
-          .then(
-            (errorMessage) =>
-              <ActionResponse>{ message: errorMessage, success: false }
-          );
-      });
+      .catch((err) => this.mapError(err, errorMessage))
   }
 
   public mapError(err: any, errorMessage: string): ActionResponse {
+    console.log(err);
     if (err instanceof TypeError) {
       return <ActionResponse>{
         message: !errorMessage ? err.message : errorMessage,
@@ -187,19 +190,32 @@ export class RestUtils {
     if (err instanceof Response) {
       if (err.status == 401) {
         return <ActionResponse>{
-          message: 'Login failed. Check your credentials and try again.',
+          message: errorMessage + '\nUnauthorized action. Check your credentials and try again.',
           success: false,
         };
       }
     }
 
-    return err.text().then(
-      (text) =>
-        <ActionResponse>{
-          message: text ? text : errorMessage,
+    return <ActionResponse>{
+          message: this.interpret(err as string, errorMessage),
           success: false,
         }
-    );
+  }
+
+  private interpret(text:string, errorMessage: string) : string {
+    if(text.includes('missing type id property \'_type\'')) {
+      return 'You are trying to write a JSON key or value that needs \'_type\' field in this cache.';
+    }
+
+    if(text.includes('Unknown type id : 5901')) {
+      return 'This cache contains Spring Session entries that can not be read or edited from the Console.';
+    }
+
+    if(text.includes('Unknown type id')) {
+      return 'This cache contains entries that can not be read or edited from the Console.';
+    }
+
+    return errorMessage + '\n' + text;
   }
 
   /**
@@ -267,22 +283,6 @@ export class RestUtils {
   }
 
   /**
-   * Returns an array of two elements that tell if the cache is encoded (key/value) with
-   * protobuf. If the result is [true, true], both key and value are encoded with protobuf
-   * @param cacheConfig, the config of the cache in string
-   * @return [boolean, boolean]
-   */
-  public static isProtobufCache(cacheConfig: string): boolean[] {
-    const config = JSON.parse(cacheConfig);
-    let encodingTypes = CacheConfigUtils.mapEncoding(config);
-    console.log(encodingTypes);
-    return [
-      encodingTypes[0] == EncodingType.Protobuf,
-      encodingTypes[1] == EncodingType.Protobuf,
-    ];
-  }
-
-  /**
    *
    * @param protobufType
    */
@@ -320,30 +320,5 @@ export class RestUtils {
         contentType = ContentType.StringContentType;
     }
     return contentType;
-  }
-
-  public static isProtobufBasicType(protobufType: string | undefined): boolean {
-    if (protobufType == undefined) {
-      return false;
-    }
-
-    switch (protobufType) {
-      case 'string':
-      case 'float':
-      case 'double':
-      case 'int32':
-      case 'uint32':
-      case 'sint32':
-      case 'fixed32':
-      case 'sfixed32':
-      case 'int64':
-      case 'uint64':
-      case 'sint64':
-      case 'fixed64':
-      case 'sfixed64':
-      case 'bool':
-        return true;
-    }
-    return false;
   }
 }

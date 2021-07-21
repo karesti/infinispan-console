@@ -1,6 +1,6 @@
-import { ContentType, RestUtils } from './restUtils';
-import { Either, left, right } from './either';
-import { CacheConfigUtils, EncodingType } from '@services/cacheConfigUtils';
+import {ContentType, RestUtils} from './restUtils';
+import {Either, left, right} from './either';
+import {CacheConfigUtils, EncodingType} from '@services/cacheConfigUtils';
 
 /**
  * Cache Service calls Infinispan endpoints related to Caches
@@ -124,18 +124,17 @@ export class CacheService {
     cacheName: string,
     configName: string
   ): Promise<ActionResponse> {
-    let createCachePromise = this.utils.restCall(
-      this.endpoint +
-        '/caches/' +
-        encodeURIComponent(cacheName) +
-        '?template=' +
-        encodeURIComponent(configName),
-      'POST'
-    );
-    return this.utils.handleCRUDActionResponse(
-      'Cache ' + cacheName + ' successfully created with ' + configName,
-      createCachePromise
-    );
+    const createCacheByConfig = this.endpoint +
+      '/caches/' +
+      encodeURIComponent(cacheName) +
+      '?template=' +
+      encodeURIComponent(configName);
+
+    return this.utils.post({
+      url: createCacheByConfig,
+      successMessage: `Cache ${cacheName} successfully created with ${configName}.`,
+      errorMessage: `Unexpected error when creating cache ${configName}.`
+    })
   }
 
   /**
@@ -161,17 +160,13 @@ export class CacheService {
       RestUtils.fromContentType(contentType)
     );
 
-    let createCachePromise = this.utils.restCall(
-      this.endpoint + '/caches/' + encodeURIComponent(cacheName),
-      'POST',
-      undefined,
-      customHeaders,
-      config
-    );
-    return this.utils.handleCRUDActionResponse(
-      'Cache ' + cacheName + ' created with the provided configuration.',
-      createCachePromise
-    );
+    const urlCreateCache = this.endpoint + '/caches/' + encodeURIComponent(cacheName);
+    return this.utils.post({
+      url: urlCreateCache,
+      successMessage: `Cache ${cacheName} created with the provided configuration.`,
+      errorMessage: 'Unexpected error creating the cache with the provided configuration.',
+      customHeaders: customHeaders
+    })
   }
 
   /**
@@ -180,15 +175,11 @@ export class CacheService {
    * @param cacheName, to be deleted if such exists
    */
   public async deleteCache(cacheName: string): Promise<ActionResponse> {
-    let deleteCachePromise = this.utils.restCall(
-      this.endpoint + '/caches/' + encodeURIComponent(cacheName),
-      'DELETE'
-    );
-
-    return this.utils.handleCRUDActionResponse(
-      'Cache ' + cacheName + ' deleted.',
-      deleteCachePromise
-    );
+    return this.utils.delete({
+      url: this.endpoint + '/caches/' + encodeURIComponent(cacheName),
+      successMessage: `Cache ${cacheName} deleted.`,
+      errorMessage: `Unexpected error deleting cache ${cacheName}.`,
+    });
   }
 
   /**
@@ -200,19 +191,11 @@ export class CacheService {
     cacheManager: string,
     cacheName: string
   ): Promise<ActionResponse> {
-    let ignoreCachePromise = this.utils.restCall(
-      this.endpoint +
-        '/server/ignored-caches/' +
-        cacheManager +
-        '/' +
-        encodeURIComponent(cacheName),
-      'POST'
-    );
-
-    return this.utils.handleCRUDActionResponse(
-      'Cache ' + cacheName + ' hidden.',
-      ignoreCachePromise
-    );
+    return this.utils.post({
+      url: this.endpoint + '/server/ignored-caches/' + cacheManager + '/' + encodeURIComponent(cacheName),
+      successMessage: `Cache ${cacheName} hidden.`,
+      errorMessage: `Unexpected error hidding cache ${cacheName}.`,
+    });
   }
 
   /**
@@ -224,19 +207,11 @@ export class CacheService {
     cacheManager: string,
     cacheName: string
   ): Promise<ActionResponse> {
-    let ignoreCachePromise = this.utils.restCall(
-      this.endpoint +
-        '/server/ignored-caches/' +
-        cacheManager +
-        '/' +
-        encodeURIComponent(cacheName),
-      'DELETE'
-    );
-
-    return this.utils.handleCRUDActionResponse(
-      'Cache ' + cacheName + ' is now shown.',
-      ignoreCachePromise
-    );
+    return this.utils.delete({
+      url: this.endpoint + '/server/ignored-caches/' + cacheManager + '/' + encodeURIComponent(cacheName),
+      successMessage: `Cache ${cacheName} is now visible.`,
+      errorMessage: `Unexpected error making cache ${cacheName} visible again.`,
+    });
   }
 
   /**
@@ -263,23 +238,19 @@ export class CacheService {
     create: boolean
   ): Promise<ActionResponse> {
     let headers = this.utils.createAuthenticatedHeader();
-
     if (keyContentType) {
       headers.append(
         'Key-Content-Type',
         RestUtils.fromContentType(keyContentType)
       );
-    } else if (RestUtils.isJSONObject(key)) {
+    } else if (CacheConfigUtils.isJSONObject(key)) {
       headers.append(
         'Key-Content-Type',
         RestUtils.fromContentType(ContentType.JSON)
       );
     }
-
     let contentTypeHeader;
-    if (
-      isNaN(Number(value)) &&
-      RestUtils.isJSONObject(value) &&
+    if (CacheConfigUtils.isJSONObject(value) &&
       valueContentType == ContentType.StringContentType
     ) {
       contentTypeHeader = RestUtils.fromContentType(ContentType.JSON);
@@ -290,7 +261,6 @@ export class CacheService {
         ContentType.StringContentType
       );
     }
-
     headers.append('Content-Type', contentTypeHeader);
 
     if (timeToLive.length > 0) {
@@ -309,20 +279,18 @@ export class CacheService {
       encodeURIComponent(cacheName) +
       '/' +
       encodeURIComponent(key);
-    const createOrUpdateMethod = create ? 'POST' : 'PUT';
 
-    const responsePromise = this.utils.restCall(
-      urlCreateOrUpdate,
-      createOrUpdateMethod,
-      undefined,
-      headers,
-      value
-    );
-    let message = create ? 'Entry added to cache ' : 'Entry updated in cache ';
-    return this.utils.handleCRUDActionResponse(
-      message + cacheName,
-      responsePromise
-    );
+    return create ? this.utils.post({
+      url: urlCreateOrUpdate,
+      successMessage: `Entry added to cache ${cacheName}.`,
+      errorMessage: `Unexpected error creating an entry in cache ${cacheName}.`,
+      customHeaders: headers
+    }) : this.utils.put({
+      url: urlCreateOrUpdate,
+      successMessage: `Entry updated in cache ${cacheName}.`,
+      errorMessage: `Unexpected error updating an entry in cache ${cacheName}.`,
+      customHeaders: headers
+    });
   }
 
   /**
@@ -392,8 +360,8 @@ export class CacheService {
     if (protobufKey) {
       const keyValue = key['_value'];
       if (
-        RestUtils.isJSONObject(keyValue) &&
-        !RestUtils.isProtobufBasicType(key['_type'])
+        CacheConfigUtils.isJSONObject(keyValue) &&
+        !CacheConfigUtils.isProtobufBasicType(key['_type'])
       ) {
         return JSON.stringify(keyValue);
       }
@@ -436,12 +404,12 @@ export class CacheService {
       encodeURIComponent(key);
 
     return this.utils
-      .restCall(getEntryUrl, 'GET', undefined, headers)
+      .restCall(getEntryUrl, 'GET', headers)
       .then((response) => {
         if (response.ok) {
           return response.text().then((value) => {
             let valueContentType = ContentType.StringContentType;
-            if (isNaN(Number(value)) && RestUtils.isJSONObject(value)) {
+            if (isNaN(Number(value)) && CacheConfigUtils.isJSONObject(value)) {
               valueContentType = ContentType.JSON;
             }
 
@@ -532,18 +500,12 @@ export class CacheService {
    * @param cacheName, the name of the cache
    */
   public async clear(cacheName: string): Promise<ActionResponse> {
-    let clearPromise = this.utils.restCall(
-      this.endpoint +
-        '/caches/' +
-        encodeURIComponent(cacheName) +
-        '?action=clear',
-      'POST'
-    );
-
-    return this.utils.handleCRUDActionResponse(
-      'Cache ' + cacheName + ' cleared',
-      clearPromise
-    );
+    const clearUrl = this.endpoint + '/caches/' + encodeURIComponent(cacheName) + '?action=clear';
+    return this.utils.post({
+      url: clearUrl,
+      successMessage: `Cache ${cacheName} cleared.`,
+      errorMessage: `Unexpected error when clearing the cache ${cacheName}.`
+    });
   }
 
   /**
@@ -567,41 +529,13 @@ export class CacheService {
       encodeURIComponent(cacheName) +
       '/' +
       encodeURIComponent(entryKey);
-    let deleteEntryPromise = this.utils.restCall(
-      deleteUrl,
-      'DELETE',
-      undefined,
-      headers
-    );
 
-    return this.utils.handleCRUDActionResponse(
-      'Entry ' + entryKey + ' deleted',
-      deleteEntryPromise
-    );
-  }
-
-  /**
-   * Retrieve backups sites for a cache
-   *
-   * @param cacheName
-   */
-  public async retrieveXSites(cacheName: string): Promise<XSite[]> {
-    return this.utils
-      .restCall(
-        this.endpoint +
-          '/caches/' +
-          encodeURIComponent(cacheName) +
-          '/x-site/backups/',
-        'GET'
-      )
-      .then((response) => response.json())
-      .then((data) => {
-        let xsites: XSite[] = [];
-        for (const [key, value] of Object.entries(data)) {
-          xsites.push(<XSite>{ name: key, status: value });
-        }
-        return xsites;
-      });
+    return this.utils.delete({
+      url: deleteUrl,
+      successMessage: `Entry ${entryKey} deleted.`,
+      errorMessage: 'Unexpected error deleting the entry.',
+      customHeaders: headers
+    });
   }
 
   /**
