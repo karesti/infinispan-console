@@ -255,3 +255,11 @@ interface SearchStats {
   query: QueryStat[];
   reindexing: boolean;
 }
+
+interface ServiceCall {
+  url: string;
+  successMessage: string;
+  errorMessage: string;
+  customHeaders?: Headers;
+  body?: string;
+}

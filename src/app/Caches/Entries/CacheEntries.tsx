@@ -99,7 +99,7 @@ const CacheEntries = (props: { cacheName: string }) => {
     if (!paginationUpgrade) {
       updateRows(cacheEntries, loadingEntries, errorEntries, infoEntries);
     }
-  }, [cacheEntries]);
+  }, [cacheEntries, errorEntries]);
 
   useEffect(() => {
       updateRows(cacheEntries, loadingEntries, errorEntries, infoEntries);

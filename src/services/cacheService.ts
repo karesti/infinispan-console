@@ -24,18 +24,9 @@ export class CacheService {
   public retrieveFullDetail(
     cacheName: string
   ): Promise<Either<ActionResponse, DetailedInfinispanCache>> {
-    return this.utils
-      .restCall(
-        this.endpoint + '/caches/' + encodeURIComponent(cacheName),
-        'GET'
-      )
-      .then((response) => {
-        if (response.ok) {
-          return response.json();
-        }
-        throw response;
-      })
-      .then((data) => {
+    return this.utils.get(
+      this.endpoint + '/caches/' + encodeURIComponent(cacheName),
+      (data) => {
         let cacheStats;
         if (data['stats']) {
           cacheStats = <CacheStats>{
@@ -67,7 +58,7 @@ export class CacheService {
         }
 
         let keyValueEncoding = CacheConfigUtils.mapEncoding(data.configuration);
-        return right(<DetailedInfinispanCache>{
+        return <DetailedInfinispanCache>{
           name: cacheName,
           started: true,
           type: CacheConfigUtils.mapCacheType(data.configuration),
@@ -90,27 +81,9 @@ export class CacheService {
             config: JSON.stringify(data.configuration, null, 2),
           },
           stats: cacheStats,
-        }) as Either<ActionResponse, DetailedInfinispanCache>;
-      })
-      .catch((err) => {
-        const errorMessage = 'Cannot retrieve details of cache ' + cacheName;
-        if (err instanceof Response) {
-          return err.text().then((errResponse) => {
-            if (errResponse == '') {
-              errResponse = errorMessage;
-            }
-            return left(<ActionResponse>{
-              message: errResponse,
-              success: false,
-            });
-          });
-        }
-
-        return left(<ActionResponse>{
-          message: err.toString() == '' ? errorMessage : err.toString(),
-          success: false,
-        });
-      });
+        };
+      }
+    );
   }
 
   /**
@@ -124,18 +97,18 @@ export class CacheService {
     cacheName: string,
     configName: string
   ): Promise<ActionResponse> {
-    let createCachePromise = this.utils.restCall(
+    const createCacheByConfig =
       this.endpoint +
-        '/caches/' +
-        encodeURIComponent(cacheName) +
-        '?template=' +
-        encodeURIComponent(configName),
-      'POST'
-    );
-    return this.utils.handleCRUDActionResponse(
-      'Cache ' + cacheName + ' successfully created with ' + configName,
-      createCachePromise
-    );
+      '/caches/' +
+      encodeURIComponent(cacheName) +
+      '?template=' +
+      encodeURIComponent(configName);
+
+    return this.utils.post({
+      url: createCacheByConfig,
+      successMessage: `Cache ${cacheName} successfully created with ${configName}.`,
+      errorMessage: `Unexpected error when creating cache ${configName}.`,
+    });
   }
 
   /**
@@ -161,17 +134,16 @@ export class CacheService {
       RestUtils.fromContentType(contentType)
     );
 
-    let createCachePromise = this.utils.restCall(
-      this.endpoint + '/caches/' + encodeURIComponent(cacheName),
-      'POST',
-      undefined,
-      customHeaders,
-      config
-    );
-    return this.utils.handleCRUDActionResponse(
-      'Cache ' + cacheName + ' created with the provided configuration.',
-      createCachePromise
-    );
+    const urlCreateCache =
+      this.endpoint + '/caches/' + encodeURIComponent(cacheName);
+    return this.utils.post({
+      url: urlCreateCache,
+      successMessage: `Cache ${cacheName} created with the provided configuration.`,
+      errorMessage:
+        'Unexpected error creating the cache with the provided configuration.',
+      customHeaders: customHeaders,
+      body: config,
+    });
   }
 
   /**
@@ -180,15 +152,11 @@ export class CacheService {
    * @param cacheName, to be deleted if such exists
    */
   public async deleteCache(cacheName: string): Promise<ActionResponse> {
-    let deleteCachePromise = this.utils.restCall(
-      this.endpoint + '/caches/' + encodeURIComponent(cacheName),
-      'DELETE'
-    );
-
-    return this.utils.handleCRUDActionResponse(
-      'Cache ' + cacheName + ' deleted.',
-      deleteCachePromise
-    );
+    return this.utils.delete({
+      url: this.endpoint + '/caches/' + encodeURIComponent(cacheName),
+      successMessage: `Cache ${cacheName} deleted.`,
+      errorMessage: `Unexpected error deleting cache ${cacheName}.`,
+    });
   }
 
   /**
@@ -200,19 +168,16 @@ export class CacheService {
     cacheManager: string,
     cacheName: string
   ): Promise<ActionResponse> {
-    let ignoreCachePromise = this.utils.restCall(
-      this.endpoint +
+    return this.utils.post({
+      url:
+        this.endpoint +
         '/server/ignored-caches/' +
         cacheManager +
         '/' +
         encodeURIComponent(cacheName),
-      'POST'
-    );
-
-    return this.utils.handleCRUDActionResponse(
-      'Cache ' + cacheName + ' hidden.',
-      ignoreCachePromise
-    );
+      successMessage: `Cache ${cacheName} hidden.`,
+      errorMessage: `Unexpected error hidding cache ${cacheName}.`,
+    });
   }
 
   /**
@@ -224,19 +189,16 @@ export class CacheService {
     cacheManager: string,
     cacheName: string
   ): Promise<ActionResponse> {
-    let ignoreCachePromise = this.utils.restCall(
-      this.endpoint +
+    return this.utils.delete({
+      url:
+        this.endpoint +
         '/server/ignored-caches/' +
         cacheManager +
         '/' +
         encodeURIComponent(cacheName),
-      'DELETE'
-    );
-
-    return this.utils.handleCRUDActionResponse(
-      'Cache ' + cacheName + ' is now shown.',
-      ignoreCachePromise
-    );
+      successMessage: `Cache ${cacheName} is now visible.`,
+      errorMessage: `Unexpected error making cache ${cacheName} visible again.`,
+    });
   }
 
   /**
@@ -263,23 +225,20 @@ export class CacheService {
     create: boolean
   ): Promise<ActionResponse> {
     let headers = this.utils.createAuthenticatedHeader();
-
     if (keyContentType) {
       headers.append(
         'Key-Content-Type',
         RestUtils.fromContentType(keyContentType)
       );
-    } else if (RestUtils.isJSONObject(key)) {
+    } else if (CacheConfigUtils.isJSONObject(key)) {
       headers.append(
         'Key-Content-Type',
         RestUtils.fromContentType(ContentType.JSON)
       );
     }
-
     let contentTypeHeader;
     if (
-      isNaN(Number(value)) &&
-      RestUtils.isJSONObject(value) &&
+      CacheConfigUtils.isJSONObject(value) &&
       valueContentType == ContentType.StringContentType
     ) {
       contentTypeHeader = RestUtils.fromContentType(ContentType.JSON);
@@ -290,7 +249,6 @@ export class CacheService {
         ContentType.StringContentType
       );
     }
-
     headers.append('Content-Type', contentTypeHeader);
 
     if (timeToLive.length > 0) {
@@ -309,20 +267,22 @@ export class CacheService {
       encodeURIComponent(cacheName) +
       '/' +
       encodeURIComponent(key);
-    const createOrUpdateMethod = create ? 'POST' : 'PUT';
 
-    const responsePromise = this.utils.restCall(
-      urlCreateOrUpdate,
-      createOrUpdateMethod,
-      undefined,
-      headers,
-      value
-    );
-    let message = create ? 'Entry added to cache ' : 'Entry updated in cache ';
-    return this.utils.handleCRUDActionResponse(
-      message + cacheName,
-      responsePromise
-    );
+    return create
+      ? this.utils.post({
+          url: urlCreateOrUpdate,
+          successMessage: `Entry added to cache ${cacheName}.`,
+          errorMessage: `Unexpected error creating an entry in cache ${cacheName}.`,
+          customHeaders: headers,
+          body: value,
+        })
+      : this.utils.put({
+          url: urlCreateOrUpdate,
+          successMessage: `Entry updated in cache ${cacheName}.`,
+          errorMessage: `Unexpected error updating an entry in cache ${cacheName}.`,
+          customHeaders: headers,
+          body: value,
+        });
   }
 
   /**
@@ -336,64 +296,46 @@ export class CacheService {
     encoding: [string, string],
     limit: string
   ): Promise<Either<ActionResponse, CacheEntry[]>> {
-    const allKeys =
+    const entriesUrl =
       this.endpoint +
       '/caches/' +
       encodeURIComponent(cacheName) +
       '?action=entries&content-negotiation=true&metadata=true&limit=' +
       limit;
-    return this.utils
-      .restCall(allKeys, 'GET')
-      .then((response) => {
-        if (response.ok) {
-          return response.json();
-        }
-        throw response;
-      })
-      .then(
-        (infos) =>
-          right(
-            infos.map(
-              (entry) =>
-                <CacheEntry>{
-                  key: this.extractKey(
-                    entry.key,
-                    encoding[0] == EncodingType.Protobuf
-                  ),
-                  keyContentType:
-                    encoding[0] == EncodingType.Protobuf
-                      ? RestUtils.fromProtobufType(entry.key['_type'])
-                      : ContentType.StringContentType,
-                  value: this.extractValue(entry.value),
-                  valueContentType:
-                    encoding[1] == EncodingType.Protobuf
-                      ? entry.value['_type']
-                      : undefined,
-                  timeToLive: this.parseMetadataNumber(entry.timeToLiveSeconds),
-                  maxIdle: this.parseMetadataNumber(entry.maxIdleTimeSeconds),
-                  created: this.parseMetadataDate(entry.created),
-                  lastUsed: this.parseMetadataDate(entry.lastUsed),
-                  expires: this.parseMetadataDate(entry.expireTime),
-                }
-            )
-          ) as Either<ActionResponse, CacheEntry[]>
+
+    return this.utils.get(entriesUrl, (data) =>
+      data.map(
+        (entry) =>
+          <CacheEntry>{
+            key: this.extractKey(
+              entry.key,
+              encoding[0] == EncodingType.Protobuf
+            ),
+            keyContentType:
+              encoding[0] == EncodingType.Protobuf
+                ? RestUtils.fromProtobufType(entry.key['_type'])
+                : ContentType.StringContentType,
+            value: this.extractValue(entry.value),
+            valueContentType:
+              encoding[1] == EncodingType.Protobuf
+                ? entry.value['_type']
+                : undefined,
+            timeToLive: this.parseMetadataNumber(entry.timeToLiveSeconds),
+            maxIdle: this.parseMetadataNumber(entry.maxIdleTimeSeconds),
+            created: this.parseMetadataDate(entry.created),
+            lastUsed: this.parseMetadataDate(entry.lastUsed),
+            expires: this.parseMetadataDate(entry.expireTime),
+          }
       )
-      .catch((err) =>
-        left(
-          this.utils.mapError(
-            err,
-            'An error occurred retrieving entries from ' + cacheName
-          )
-        )
-      );
+    );
   }
 
   private extractKey(key: any, protobufKey: boolean): string {
     if (protobufKey) {
       const keyValue = key['_value'];
       if (
-        RestUtils.isJSONObject(keyValue) &&
-        !RestUtils.isProtobufBasicType(key['_type'])
+        CacheConfigUtils.isJSONObject(keyValue) &&
+        !CacheConfigUtils.isProtobufBasicType(key['_type'])
       ) {
         return JSON.stringify(keyValue);
       }
@@ -436,12 +378,12 @@ export class CacheService {
       encodeURIComponent(key);
 
     return this.utils
-      .restCall(getEntryUrl, 'GET', undefined, headers)
+      .restCall(getEntryUrl, 'GET', headers)
       .then((response) => {
         if (response.ok) {
           return response.text().then((value) => {
             let valueContentType = ContentType.StringContentType;
-            if (isNaN(Number(value)) && RestUtils.isJSONObject(value)) {
+            if (isNaN(Number(value)) && CacheConfigUtils.isJSONObject(value)) {
               valueContentType = ContentType.JSON;
             }
 
@@ -532,18 +474,16 @@ export class CacheService {
    * @param cacheName, the name of the cache
    */
   public async clear(cacheName: string): Promise<ActionResponse> {
-    let clearPromise = this.utils.restCall(
+    const clearUrl =
       this.endpoint +
-        '/caches/' +
-        encodeURIComponent(cacheName) +
-        '?action=clear',
-      'POST'
-    );
-
-    return this.utils.handleCRUDActionResponse(
-      'Cache ' + cacheName + ' cleared',
-      clearPromise
-    );
+      '/caches/' +
+      encodeURIComponent(cacheName) +
+      '?action=clear';
+    return this.utils.post({
+      url: clearUrl,
+      successMessage: `Cache ${cacheName} cleared.`,
+      errorMessage: `Unexpected error when clearing the cache ${cacheName}.`,
+    });
   }
 
   /**
@@ -567,41 +507,13 @@ export class CacheService {
       encodeURIComponent(cacheName) +
       '/' +
       encodeURIComponent(entryKey);
-    let deleteEntryPromise = this.utils.restCall(
-      deleteUrl,
-      'DELETE',
-      undefined,
-      headers
-    );
 
-    return this.utils.handleCRUDActionResponse(
-      'Entry ' + entryKey + ' deleted',
-      deleteEntryPromise
-    );
-  }
-
-  /**
-   * Retrieve backups sites for a cache
-   *
-   * @param cacheName
-   */
-  public async retrieveXSites(cacheName: string): Promise<XSite[]> {
-    return this.utils
-      .restCall(
-        this.endpoint +
-          '/caches/' +
-          encodeURIComponent(cacheName) +
-          '/x-site/backups/',
-        'GET'
-      )
-      .then((response) => response.json())
-      .then((data) => {
-        let xsites: XSite[] = [];
-        for (const [key, value] of Object.entries(data)) {
-          xsites.push(<XSite>{ name: key, status: value });
-        }
-        return xsites;
-      });
+    return this.utils.delete({
+      url: deleteUrl,
+      successMessage: `Entry ${entryKey} deleted.`,
+      errorMessage: 'Unexpected error deleting the entry.',
+      customHeaders: headers,
+    });
   }
 
   /**
@@ -612,30 +524,17 @@ export class CacheService {
   public async getConfiguration(
     cacheName: string
   ): Promise<Either<ActionResponse, CacheConfig>> {
-    return this.utils
-      .restCall(
-        this.endpoint +
-          '/caches/' +
-          encodeURIComponent(cacheName) +
-          '?action=config',
-        'GET'
-      )
-      .then((response) => response.json())
-      .then(
-        (data) =>
-          right(<CacheConfig>{
-            name: cacheName,
-            config: JSON.stringify(data, null, 2),
-          }) as Either<ActionResponse, CacheConfig>
-      )
-      .catch((err) =>
-        left(
-          this.utils.mapError(
-            err,
-            'Cannot retrieve configuration for cache ' + cacheName
-          )
-        )
-      );
+    return this.utils.get(
+      this.endpoint +
+        '/caches/' +
+        encodeURIComponent(cacheName) +
+        '?action=config',
+      (data) =>
+        <CacheConfig>{
+          name: cacheName,
+          config: JSON.stringify(data, null, 2),
+        }
+    );
   }
 
   public async getSize(
