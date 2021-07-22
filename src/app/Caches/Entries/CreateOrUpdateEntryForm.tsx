@@ -25,7 +25,7 @@ import {CacheConfigUtils, ContentType, EncodingType, Flags} from "@services/cach
 
 const CreateOrUpdateEntryForm = (props: {
   cacheName: string;
-  cacheEncoding: [string, string],
+  cacheEncoding: CacheEncoding,
   keyToEdit: string;
   keyContentType: ContentType;
   isModalOpen: boolean;
@@ -52,13 +52,13 @@ const CreateOrUpdateEntryForm = (props: {
   };
 
   const keyContentTypeInitialState: ISelectField = {
-    selected: props.keyContentType? props.keyContentType as string : CacheConfigUtils.getContentTypeOptions(props.cacheEncoding[0] as EncodingType)[0] as string,
+    selected: CacheConfigUtils.getContentTypeOptions(props.cacheEncoding.key as EncodingType)[0],
     expanded: false,
     helperText: 'Select a key content type.',
   };
 
   const contentTypeInitialState: ISelectField = {
-    selected: ContentType.StringContentType as string,
+    selected: CacheConfigUtils.getContentTypeOptions(props.cacheEncoding.value as EncodingType)[0],
     expanded: false,
     helperText: t('caches.entries.add-entry-content-type-help'),
   };
@@ -104,7 +104,7 @@ const CreateOrUpdateEntryForm = (props: {
     } else {
       setIsEdition(true);
       ConsoleServices.caches()
-        .getEntry(props.cacheName, props.keyToEdit, props.keyContentType)
+        .getEntry(props.cacheName, props.cacheEncoding, props.keyToEdit, props.keyContentType)
         .then((eitherResponse) => {
           if (eitherResponse.isRight()) {
             setKey((prevState) => {
@@ -246,6 +246,7 @@ const CreateOrUpdateEntryForm = (props: {
       ConsoleServices.caches()
         .createOrUpdate(
           props.cacheName,
+          props.cacheEncoding,
           key.value,
           selectedKeyContentType,
           value.value,
@@ -313,7 +314,7 @@ const CreateOrUpdateEntryForm = (props: {
         isOpen={keyContentType.expanded}
         isDisabled={isEdition}
       >
-        {contentTypeOptions(props.cacheEncoding[0] as EncodingType)}
+        {contentTypeOptions(props.cacheEncoding.key as EncodingType)}
       </Select>
     </FormGroup>
     );
@@ -504,7 +505,7 @@ const CreateOrUpdateEntryForm = (props: {
         selections={valueContentType.selected}
         isOpen={valueContentType.expanded}
       >
-        {contentTypeOptions(props.cacheEncoding[1] as EncodingType)}
+        {contentTypeOptions(props.cacheEncoding.value as EncodingType)}
       </Select>
     </FormGroup>
     );

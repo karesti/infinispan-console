@@ -26,15 +26,15 @@ export class ProtobufService {
         url: this.endpoint + '/' + name,
         successMessage: `Schema ${name} created.`,
         errorMessage: `Unexpected error creating schema ${name}`,
-        body: schema
+        body: schema,
       });
     }
 
-    return  this.utils.put({
+    return this.utils.put({
       url: this.endpoint + '/' + name,
       successMessage: `Schema ${name} updated.`,
       errorMessage: `Unexpected error updating schema ${name}`,
-      body: schema
+      body: schema,
     });
   }
 

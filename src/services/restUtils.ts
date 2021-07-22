@@ -17,7 +17,6 @@ export enum CacheType {
   Scattered = 'Scattered',
 }
 
-
 /**
  * Rest Utility class
  *

@@ -1,7 +1,7 @@
-import {RestUtils} from './restUtils';
-import {Either, left} from './either';
-import {CacheConfigUtils} from '@services/cacheConfigUtils';
-import displayUtils from "@services/displayUtils";
+import { RestUtils } from './restUtils';
+import { Either, left } from './either';
+import { CacheConfigUtils } from '@services/cacheConfigUtils';
+import displayUtils from '@services/displayUtils';
 
 export class ContainerService {
   endpoint: string;
@@ -45,7 +45,9 @@ export class ContainerService {
             physical_addresses: data.physical_addresses,
             coordinator: data.coordinator,
             cluster_name: data.cluster_name,
-            cache_manager_status: displayUtils.parseComponentStatus(data.cache_manager_status),
+            cache_manager_status: displayUtils.parseComponentStatus(
+              data.cache_manager_status
+            ),
             cluster_size: data.cluster_size,
             defined_caches: this.removeInternalCaches(data.defined_caches),
             cache_configuration_names: this.removeInternalTemplate(

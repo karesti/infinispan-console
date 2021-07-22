@@ -2,7 +2,7 @@ import React, {useCallback, useEffect, useState} from 'react';
 import {ConsoleServices} from "@services/ConsoleServices";
 import {useConnectedUser} from "@app/services/userManagementHook";
 import {ConsoleACL} from "@services/securityService";
-import {ContentType} from "@services/restUtils";
+import {ContentType} from "@services/cacheConfigUtils";
 
 const initialContext = {
   error: '',
@@ -65,7 +65,7 @@ const CacheDetailProvider = ({ children }) => {
   };
 
   const fetchEntry = (keyToSearch: string, kct: ContentType ) => {
-    ConsoleServices.caches().getEntry(cacheName, keyToSearch, kct).then((response) => {
+    ConsoleServices.caches().getEntry(cacheName, cache.encoding, keyToSearch, kct).then((response) => {
       let entries: CacheEntry[] = [];
       if (response.isRight()) {
         entries = [response.value];

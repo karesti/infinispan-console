@@ -1,6 +1,6 @@
 interface ComponentStatus {
   name: string;
-  color:string;
+  color: string;
   icon: string;
 }
 
@@ -80,6 +80,7 @@ interface CacheInfo {
 
 interface CacheEntry {
   key: string;
+  keyDisplay: string;
   keyContentType?: string;
   value: string;
   valueContentType?: string;
@@ -98,10 +99,15 @@ interface CacheKey {
   keyContentType: string;
 }
 
+interface CacheEncoding {
+  key: string;
+  value: string;
+}
+
 interface DetailedInfinispanCache {
   name: string;
   configuration: CacheConfig;
-  encoding: [string, string];
+  encoding: CacheEncoding;
   type: string;
   started: boolean;
   size?: number;

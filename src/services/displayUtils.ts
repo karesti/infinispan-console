@@ -14,10 +14,10 @@ import {
   global_warning_color_100,
   global_info_color_100,
   chart_color_blue_500,
-  chart_color_black_500
+  chart_color_black_500,
 } from '@patternfly/react-tokens';
-import {AlertVariant} from '@patternfly/react-core';
-import {CacheType, ComponentHealth,} from '@services/restUtils';
+import { AlertVariant } from '@patternfly/react-core';
+import { CacheType, ComponentHealth } from '@services/restUtils';
 import numeral from 'numeral';
 
 /**
@@ -25,21 +25,64 @@ import numeral from 'numeral';
  *
  * @author Katia Aresti
  */
-export const UNKNOWN_CS = {name: 'Unknown', color: chart_global_label_Fill.value, icon: AlertVariant.warning};
-export const OK_CS = {name: 'Ok', color: global_success_color_100.value, icon:AlertVariant.success};
-export const RUNNING_CS = {name: 'Running', color: global_success_color_100.value, icon:AlertVariant.success};
-export const INIT_CS = {name: 'Initializing', color: global_warning_color_100.value, icon:AlertVariant.warning };
-export const CANCEL_CS =  {name: 'Cancelling', color: global_warning_color_100.value, icon: AlertVariant.warning };
-export const SENDING_CS =  {name: 'Sending', color: global_warning_color_100.value, icon: AlertVariant.warning };
-export const FAILED_CS =  {name: 'Failed', color: global_danger_color_100.value, icon: AlertVariant.danger };
-export const ERROR_CS = {name: 'Error', color: global_danger_color_100.value,  icon: AlertVariant.danger  };
-export const TERMINATED_CS = {name: 'Terminated', color: global_info_color_100.value,  icon: AlertVariant.info  };
-export const STOPPING_CS = {name: 'Stopping', color: global_info_color_100.value,  icon: AlertVariant.info  };
-export const INSTANTIATED_CS = {name: 'Instantiated', color: global_info_color_100.value,  icon: AlertVariant.info  };
+export const UNKNOWN_CS = {
+  name: 'Unknown',
+  color: chart_global_label_Fill.value,
+  icon: AlertVariant.warning,
+};
+export const OK_CS = {
+  name: 'Ok',
+  color: global_success_color_100.value,
+  icon: AlertVariant.success,
+};
+export const RUNNING_CS = {
+  name: 'Running',
+  color: global_success_color_100.value,
+  icon: AlertVariant.success,
+};
+export const INIT_CS = {
+  name: 'Initializing',
+  color: global_warning_color_100.value,
+  icon: AlertVariant.warning,
+};
+export const CANCEL_CS = {
+  name: 'Cancelling',
+  color: global_warning_color_100.value,
+  icon: AlertVariant.warning,
+};
+export const SENDING_CS = {
+  name: 'Sending',
+  color: global_warning_color_100.value,
+  icon: AlertVariant.warning,
+};
+export const FAILED_CS = {
+  name: 'Failed',
+  color: global_danger_color_100.value,
+  icon: AlertVariant.danger,
+};
+export const ERROR_CS = {
+  name: 'Error',
+  color: global_danger_color_100.value,
+  icon: AlertVariant.danger,
+};
+export const TERMINATED_CS = {
+  name: 'Terminated',
+  color: global_info_color_100.value,
+  icon: AlertVariant.info,
+};
+export const STOPPING_CS = {
+  name: 'Stopping',
+  color: global_info_color_100.value,
+  icon: AlertVariant.info,
+};
+export const INSTANTIATED_CS = {
+  name: 'Instantiated',
+  color: global_info_color_100.value,
+  icon: AlertVariant.info,
+};
 
 class DisplayUtils {
-
-  public parseComponentStatus(value? : string) : ComponentStatus {
+  public parseComponentStatus(value?: string): ComponentStatus {
     let componentStatus: ComponentStatus;
 
     switch (value) {

@@ -1,6 +1,12 @@
-import { ContentType, RestUtils } from './restUtils';
+import { RestUtils } from './restUtils';
 import { Either, left, right } from './either';
-import { CacheConfigUtils, EncodingType } from '@services/cacheConfigUtils';
+import {
+  CacheConfigUtils,
+  ContentType,
+  EncodingType,
+} from '@services/cacheConfigUtils';
+import { EncodingUtility } from '@services/encoding/encodingUtility';
+import { ProtobufDataTransformer } from '@services/encoding/protobufDataTransformer';
 
 /**
  * Cache Service calls Infinispan endpoints related to Caches
@@ -131,7 +137,7 @@ export class CacheService {
     let customHeaders = this.utils.createAuthenticatedHeader();
     customHeaders.append(
       'Content-Type',
-      RestUtils.fromContentType(contentType)
+      EncodingUtility.fromContentType(contentType)
     );
 
     const urlCreateCache =
@@ -215,6 +221,7 @@ export class CacheService {
    */
   public async createOrUpdate(
     cacheName: string,
+    cacheEncoding: CacheEncoding,
     key: string,
     keyContentType: ContentType,
     value: string,
@@ -225,31 +232,54 @@ export class CacheService {
     create: boolean
   ): Promise<ActionResponse> {
     let headers = this.utils.createAuthenticatedHeader();
-    if (keyContentType) {
-      headers.append(
-        'Key-Content-Type',
-        RestUtils.fromContentType(keyContentType)
-      );
-    } else if (CacheConfigUtils.isJSONObject(key)) {
-      headers.append(
-        'Key-Content-Type',
-        RestUtils.fromContentType(ContentType.JSON)
-      );
+
+    let keyContentTypeHeader;
+    if (cacheEncoding.key == EncodingType.XML) {
+      keyContentTypeHeader = EncodingUtility.fromContentType(ContentType.XML);
     }
+
     let contentTypeHeader;
-    if (
-      CacheConfigUtils.isJSONObject(value) &&
-      valueContentType == ContentType.StringContentType
-    ) {
-      contentTypeHeader = RestUtils.fromContentType(ContentType.JSON);
-    } else if (valueContentType) {
-      contentTypeHeader = RestUtils.fromContentType(valueContentType);
-    } else {
-      contentTypeHeader = RestUtils.fromContentType(
-        ContentType.StringContentType
-      );
+    if (cacheEncoding.value == EncodingType.XML) {
+      contentTypeHeader = EncodingUtility.fromContentType(ContentType.XML);
     }
+
+    // if (valueContentType) {
+    //   headers.append(
+    //     'Key-Content-Type',
+    //     EncodingUtility.fromContentType(keyContentType)
+    //   );
+    // } else if (CacheConfigUtils.isJSONObject(key)) {
+    //   headers.append(
+    //     'Key-Content-Type',
+    //     EncodingUtility.fromContentType(ContentType.JSON)
+    //   );
+    //   key = JSON.parse(key);
+    // }
+
+    // let contentTypeHeader;
+    // if (
+    //   CacheConfigUtils.isJSONObject(value) &&
+    //   valueContentType == ContentType.StringContentType
+    // ) {
+    //   contentTypeHeader = EncodingUtility.fromContentType(ContentType.JSON);
+    // } else if (valueContentType) {
+    //   contentTypeHeader = EncodingUtility.fromContentType(valueContentType);
+    // } else {
+    //   contentTypeHeader = EncodingUtility.fromContentType(
+    //     ContentType.StringContentType
+    //   );
+    // }
+
+    headers.append('Key-Content-Type', keyContentTypeHeader);
     headers.append('Content-Type', contentTypeHeader);
+
+    if (keyContentType == ContentType.JSON && isNaN(Number(key))) {
+      key = '"' + key + '"';
+    }
+
+    if (valueContentType == ContentType.JSON && isNaN(Number(value))) {
+      value = '"' + value + '"';
+    }
 
     if (timeToLive.length > 0) {
       headers.append('timeToLiveSeconds', timeToLive);
@@ -293,7 +323,7 @@ export class CacheService {
    */
   public async getEntries(
     cacheName: string,
-    encoding: [string, string],
+    encoding: CacheEncoding,
     limit: string
   ): Promise<Either<ActionResponse, CacheEntry[]>> {
     const entriesUrl =
@@ -307,19 +337,19 @@ export class CacheService {
       data.map(
         (entry) =>
           <CacheEntry>{
-            key: this.extractKey(
+            key: this.extractKey(entry.key, encoding.key as EncodingType),
+            keyContentType: this.extractContentType(
               entry.key,
-              encoding[0] == EncodingType.Protobuf
+              encoding.key as EncodingType
             ),
-            keyContentType:
-              encoding[0] == EncodingType.Protobuf
-                ? RestUtils.fromProtobufType(entry.key['_type'])
-                : ContentType.StringContentType,
-            value: this.extractValue(entry.value),
-            valueContentType:
-              encoding[1] == EncodingType.Protobuf
-                ? entry.value['_type']
-                : undefined,
+            value: this.extractValue(
+              entry.value,
+              encoding.value as EncodingType
+            ),
+            valueContentType: this.extractContentType(
+              entry.value,
+              encoding.value as EncodingType
+            ),
             timeToLive: this.parseMetadataNumber(entry.timeToLiveSeconds),
             maxIdle: this.parseMetadataNumber(entry.maxIdleTimeSeconds),
             created: this.parseMetadataDate(entry.created),
@@ -330,12 +360,12 @@ export class CacheService {
     );
   }
 
-  private extractKey(key: any, protobufKey: boolean): string {
-    if (protobufKey) {
+  private extractKey(key: string, keyEncoding: EncodingType): string {
+    if (keyEncoding == EncodingType.Protobuf) {
       const keyValue = key['_value'];
       if (
         CacheConfigUtils.isJSONObject(keyValue) &&
-        !CacheConfigUtils.isProtobufBasicType(key['_type'])
+        !ProtobufDataTransformer.isProtobufBasicType(key['_type'])
       ) {
         return JSON.stringify(keyValue);
       }
@@ -345,8 +375,24 @@ export class CacheService {
     return key.toString();
   }
 
-  private extractValue(value: any): string {
+  private extractValue(value: any, encoding: EncodingType): string {
+    if (encoding == EncodingType.XML) {
+      return value;
+    }
+
     return JSON.stringify(value);
+  }
+
+  private extractContentType(
+    content: any,
+    encodingType: EncodingType
+  ): ContentType {
+    if (encodingType == EncodingType.XML) {
+      return ContentType.XML;
+    } else if (encodingType == EncodingType.Protobuf) {
+      return ProtobufDataTransformer.fromProtobufType(content['_type']);
+    }
+    return ContentType.StringContentType;
   }
 
   /**
@@ -358,16 +404,19 @@ export class CacheService {
    */
   public async getEntry(
     cacheName: string,
+    encoding: CacheEncoding,
     key: string,
     keyContentType?: ContentType
   ): Promise<Either<ActionResponse, CacheEntry>> {
     let headers = this.utils.createAuthenticatedHeader();
     if (keyContentType) {
-      let keyContentTypeHeader = RestUtils.fromContentType(keyContentType);
+      let keyContentTypeHeader = EncodingUtility.fromContentType(
+        keyContentType
+      );
       headers.append('Key-Content-Type', keyContentTypeHeader);
       headers.append(
         'Content-Type',
-        RestUtils.fromContentType(ContentType.JSON)
+        EncodingUtility.fromContentType(ContentType.JSON)
       );
     }
     const getEntryUrl =
@@ -382,10 +431,13 @@ export class CacheService {
       .then((response) => {
         if (response.ok) {
           return response.text().then((value) => {
-            let valueContentType = ContentType.StringContentType;
-            if (isNaN(Number(value)) && CacheConfigUtils.isJSONObject(value)) {
-              valueContentType = ContentType.JSON;
-            }
+            let valueContentType = this.extractContentType(
+              value,
+              encoding.value as EncodingType
+            );
+            // if (isNaN(Number(value)) && CacheConfigUtils.isJSONObject(value)) {
+            //   valueContentType = ContentType.JSON;
+            // }
 
             const timeToLive = response.headers.get('timeToLiveSeconds');
             const maxIdleTimeSeconds = response.headers.get(
@@ -498,7 +550,7 @@ export class CacheService {
     keyContentType: ContentType
   ): Promise<ActionResponse> {
     let headers = this.utils.createAuthenticatedHeader();
-    let keyContentTypeHeader = RestUtils.fromContentType(keyContentType);
+    let keyContentTypeHeader = EncodingUtility.fromContentType(keyContentType);
     headers.append('Key-Content-Type', keyContentTypeHeader);
 
     const deleteUrl =

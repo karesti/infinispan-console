@@ -32,8 +32,7 @@ import {MoreInfoTooltip} from "@app/Common/MoreInfoTooltip";
 import {ConsoleServices} from "@services/ConsoleServices";
 import {useConnectedUser} from "@app/services/userManagementHook";
 import {ConsoleACL} from "@services/securityService";
-import {CacheConfigUtils, EncodingType} from "@services/cacheConfigUtils";
-import {ContentType} from "@services/restUtils";
+import {CacheConfigUtils, EncodingType, ContentType} from "@services/cacheConfigUtils";
 
 const CacheEntries = (props: { cacheName: string }) => {
   const [
@@ -183,8 +182,7 @@ const CacheEntries = (props: { cacheName: string }) => {
       rows = currentPageEntries.map((entry) => {
         let keyForAction = entry.key;
         let keyContentType = entry.keyContentType;
-        const isProtobuf: [string, string] = cache.encoding;
-        if (isProtobuf[0] == EncodingType.Protobuf) {
+        if (cache.encoding.key == EncodingType.Protobuf) {
           keyForAction = CacheConfigUtils.extractValueFromProtobufValueContent(entry.key);
         }
 
@@ -291,7 +289,7 @@ const CacheEntries = (props: { cacheName: string }) => {
     }
   };
   const keyContentTypeOptions = () => {
-    return CacheConfigUtils.getContentTypeOptions(cache.encoding[0] as EncodingType).map((contentType) => (
+    return CacheConfigUtils.getContentTypeOptions(cache.encoding.key as EncodingType).map((contentType) => (
       <SelectOption key={contentType as string} value={contentType} />
     ));
   };
@@ -299,7 +297,7 @@ const CacheEntries = (props: { cacheName: string }) => {
   const [expandedKey, setExpandedKey] = useState(false);
   const [keyType, setKeyType] = useState<
     string | SelectOptionObject | (string | SelectOptionObject)[]
-  >(ContentType.StringContentType);
+  >(CacheConfigUtils.getContentTypeOptions(cache.encoding.key as EncodingType)[0]);
 
   const buildPagination = () => {
     return (

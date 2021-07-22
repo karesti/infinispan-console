@@ -64,7 +64,7 @@ export class CacheConfigUtils {
    * Map the encoding type of the cache
    * @param config, config of the cache
    */
-  public static mapEncoding(config: JSON): [EncodingType, EncodingType] {
+  public static mapEncoding(config: JSON): CacheEncoding {
     let cacheConfigHead;
     if (config.hasOwnProperty(Distributed)) {
       cacheConfigHead = config[Distributed];
@@ -81,15 +81,17 @@ export class CacheConfigUtils {
     }
 
     if (cacheConfigHead.hasOwnProperty('encoding')) {
-      return [
-        CacheConfigUtils.toEncoding(cacheConfigHead.encoding.key['media-type']),
-        CacheConfigUtils.toEncoding(
+      return {
+        key: CacheConfigUtils.toEncoding(
+          cacheConfigHead.encoding.key['media-type']
+        ),
+        value: CacheConfigUtils.toEncoding(
           cacheConfigHead.encoding.value['media-type']
         ),
-      ];
+      };
     }
 
-    return [EncodingType.Empty, EncodingType.Empty];
+    return { key: EncodingType.Empty, value: EncodingType.Empty };
   }
 
   public static toEncoding(encodingConf: string | undefined): EncodingType {
@@ -204,131 +206,8 @@ export class CacheConfigUtils {
     }
   }
 
-  public static isProtobufBasicType(protobufType: string | undefined): boolean {
-    if (protobufType == undefined) {
-      return false;
-    }
-
-    switch (protobufType) {
-      case 'string':
-      case 'float':
-      case 'double':
-      case 'int32':
-      case 'uint32':
-      case 'sint32':
-      case 'fixed32':
-      case 'sfixed32':
-      case 'int64':
-      case 'uint64':
-      case 'sint64':
-      case 'fixed64':
-      case 'sfixed64':
-      case 'bool':
-        return true;
-    }
-    return false;
-  }
-  /**
-   * Calculate the key content type header value to send ot the REST API
-   * @param contentType
-   */
-  public static fromContentType(contentType: ContentType): string {
-    let stringContentType = '';
-    switch (contentType) {
-      case ContentType.StringContentType:
-      case ContentType.DoubleContentType:
-      case ContentType.IntegerContentType:
-      case ContentType.LongContentType:
-      case ContentType.BooleanContentType:
-        stringContentType =
-          'application/x-java-object;type=java.lang.' + contentType.toString();
-        break;
-      case ContentType.JSON:
-        stringContentType = 'application/json';
-        break;
-      case ContentType.XML:
-        stringContentType = 'application/xml';
-        break;
-      default:
-        console.warn('Content type not mapped ' + contentType);
-    }
-
-    return stringContentType;
-  }
-
-  /**
-   * Translate from string to ContentType
-   *
-   * @param contentTypeHeader
-   * @param defaultContentType
-   */
-  public static toContentType(
-    contentTypeHeader: string | null | undefined,
-    defaultContentType?: ContentType
-  ): ContentType {
-    if (contentTypeHeader == null) {
-      return defaultContentType
-        ? defaultContentType
-        : ContentType.StringContentType;
-    }
-    if (
-      contentTypeHeader.startsWith('application/x-java-object;type=java.lang.')
-    ) {
-      const contentType = contentTypeHeader.replace(
-        'application/x-java-object;type=java.lang.',
-        ''
-      );
-      return contentType as ContentType;
-    }
-
-    if (contentTypeHeader == 'application/json') {
-      return ContentType.JSON;
-    }
-
-    if (contentTypeHeader == 'application/xml') {
-      return ContentType.XML;
-    }
-
-    return ContentType.StringContentType;
-  }
-
   /**
    *
    * @param protobufType
    */
-  public static fromProtobufType(protobufType: string): ContentType {
-    let contentType;
-
-    switch (protobufType) {
-      case 'string':
-        contentType = ContentType.StringContentType;
-        break;
-      case 'float':
-        contentType = ContentType.FloatContentType;
-        break;
-      case 'double':
-        contentType = ContentType.DoubleContentType;
-        break;
-      case 'int32':
-      case 'uint32':
-      case 'sint32':
-      case 'fixed32':
-      case 'sfixed32':
-        contentType = ContentType.IntegerContentType;
-        break;
-      case 'int64':
-      case 'uint64':
-      case 'sint64':
-      case 'fixed64':
-      case 'sfixed64':
-        contentType = ContentType.LongContentType;
-        break;
-      case 'bool':
-        contentType = ContentType.BooleanContentType;
-        break;
-      default:
-        contentType = ContentType.StringContentType;
-    }
-    return contentType;
-  }
 }

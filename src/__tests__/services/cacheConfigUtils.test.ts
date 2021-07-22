@@ -5,9 +5,9 @@ import {
   Invalidated,
   Local,
   Replicated,
-  Scattered
+  Scattered,
+  ContentType
 } from "@services/cacheConfigUtils";
-import {ContentType} from "@services/restUtils";
 
 describe('Cache Config Utils tests', () => {
   test('cache topology', () => {
