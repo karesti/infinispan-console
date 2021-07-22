@@ -1,9 +1,15 @@
+interface ComponentStatus {
+  name: string;
+  color:string;
+  icon: string;
+}
+
 interface CacheManager {
   name: string;
   physical_addresses: [string];
   coordinator: boolean;
   cluster_name: string;
-  cache_manager_status: string;
+  cache_manager_status: ComponentStatus;
   cluster_size: number;
   defined_caches: [DefinedCache];
   cache_configuration_names: [string];
@@ -147,7 +153,7 @@ interface QueryStats {
 
 interface StateTransferStatus {
   site: string;
-  status: string;
+  status: ComponentStatus;
 }
 
 interface SiteNode {

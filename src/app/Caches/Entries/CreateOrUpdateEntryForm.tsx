@@ -17,12 +17,11 @@ import { SelectOptionObject } from '@patternfly/react-core/src/components/Select
 import { MoreInfoTooltip } from '@app/Common/MoreInfoTooltip';
 import { useApiAlert } from '@app/utils/useApiAlert';
 import { global_spacer_md } from '@patternfly/react-tokens';
-import { ContentType, Flags } from '@services/restUtils';
 import formUtils, { IField, ISelectField } from '@services/formUtils';
 import { useReloadCache } from '@app/services/cachesHook';
 import { useTranslation } from 'react-i18next';
 import {ConsoleServices} from "@services/ConsoleServices";
-import {CacheConfigUtils, EncodingType} from "@services/cacheConfigUtils";
+import {CacheConfigUtils, ContentType, EncodingType, Flags} from "@services/cacheConfigUtils";
 
 const CreateOrUpdateEntryForm = (props: {
   cacheName: string;

@@ -1,5 +1,6 @@
 import { RestUtils } from '@services/restUtils';
 import { Either, left, right } from './either';
+import displayUtils from "@services/displayUtils";
 
 /**
  * Cross Site replication operations
@@ -72,7 +73,7 @@ export class CrossSiteReplicationService {
       (data) =>
         Object.keys(data).map(
           (siteName) =>
-            <StateTransferStatus>{ site: siteName, status: data[siteName] }
+            <StateTransferStatus>{ site: siteName, status: displayUtils.parseComponentStatus(data[siteName]) }
         )
     );
   }

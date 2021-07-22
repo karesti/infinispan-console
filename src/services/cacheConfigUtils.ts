@@ -3,13 +3,47 @@
  *
  * @author Katia Aresti
  */
-import { ContentType } from '@services/restUtils';
+export enum ContentType {
+  StringContentType = 'String', //'application/x-java-object;type=java.lang.String'
+  IntegerContentType = 'Integer', //'application/x-java-object;type=java.lang.Integer'
+  DoubleContentType = 'Double', //'application/x-java-object;type=java.lang.Double'
+  FloatContentType = 'Float', //'application/x-java-object;type=java.lang.Float'
+  LongContentType = 'Long', //'application/x-java-object;type=java.lang.Long'
+  BooleanContentType = 'Boolean', //'application/x-java-object;type=java.lang.Boolean'
+  JSON = 'Json', //'application/json'
+  XML = 'Xml', //'application/xml'
+}
 
 export const Distributed = 'distributed-cache';
 export const Replicated = 'replicated-cache';
 export const Invalidated = 'invalidation-cache';
 export const Local = 'local-cache';
 export const Scattered = 'scattered-cache';
+
+export enum Flags {
+  CACHE_MODE_LOCAL = 'CACHE_MODE_LOCAL',
+  FAIL_SILENTLY = 'FAIL_SILENTLY',
+  FORCE_ASYNCHRONOUS = 'FORCE_ASYNCHRONOUS',
+  FORCE_SYNCHRONOUS = 'FORCE_SYNCHRONOUS',
+  FORCE_WRITE_LOCK = 'FORCE_WRITE_LOCK',
+  IGNORE_RETURN_VALUES = 'IGNORE_RETURN_VALUES',
+  IGNORE_TRANSACTION = 'IGNORE_TRANSACTION',
+  PUT_FOR_EXTERNAL_READ = 'PUT_FOR_EXTERNAL_READ',
+  REMOTE_ITERATION = 'REMOTE_ITERATION',
+  SKIP_CACHE_LOAD = 'SKIP_CACHE_LOAD',
+  SKIP_CACHE_STORE = 'SKIP_CACHE_STORE',
+  SKIP_INDEX_CLEANUP = 'SKIP_INDEX_CLEANUP',
+  SKIP_INDEXING = 'SKIP_INDEXING',
+  SKIP_LISTENER_NOTIFICATION = 'SKIP_LISTENER_NOTIFICATION',
+  SKIP_LOCKING = 'SKIP_LOCKING',
+  SKIP_OWNERSHIP_CHECK = 'SKIP_OWNERSHIP_CHECK',
+  SKIP_REMOTE_LOOKUP = 'SKIP_REMOTE_LOOKUP',
+  SKIP_SHARED_CACHE_STORE = 'SKIP_SHARED_CACHE_STORE',
+  SKIP_SIZE_OPTIMIZATION = 'SKIP_SIZE_OPTIMIZATION',
+  SKIP_STATISTICS = 'SKIP_STATISTICS',
+  SKIP_XSITE_BACKUP = 'SKIP_XSITE_BACKUP',
+  ZERO_LOCK_ACQUISITION_TIMEOUT = 'ZERO_LOCK_ACQUISITION_TIMEOUT',
+}
 
 export enum EncodingType {
   Protobuf = 'application/x-protostream',
@@ -193,5 +227,108 @@ export class CacheConfigUtils {
         return true;
     }
     return false;
+  }
+  /**
+   * Calculate the key content type header value to send ot the REST API
+   * @param contentType
+   */
+  public static fromContentType(contentType: ContentType): string {
+    let stringContentType = '';
+    switch (contentType) {
+      case ContentType.StringContentType:
+      case ContentType.DoubleContentType:
+      case ContentType.IntegerContentType:
+      case ContentType.LongContentType:
+      case ContentType.BooleanContentType:
+        stringContentType =
+          'application/x-java-object;type=java.lang.' + contentType.toString();
+        break;
+      case ContentType.JSON:
+        stringContentType = 'application/json';
+        break;
+      case ContentType.XML:
+        stringContentType = 'application/xml';
+        break;
+      default:
+        console.warn('Content type not mapped ' + contentType);
+    }
+
+    return stringContentType;
+  }
+
+  /**
+   * Translate from string to ContentType
+   *
+   * @param contentTypeHeader
+   * @param defaultContentType
+   */
+  public static toContentType(
+    contentTypeHeader: string | null | undefined,
+    defaultContentType?: ContentType
+  ): ContentType {
+    if (contentTypeHeader == null) {
+      return defaultContentType
+        ? defaultContentType
+        : ContentType.StringContentType;
+    }
+    if (
+      contentTypeHeader.startsWith('application/x-java-object;type=java.lang.')
+    ) {
+      const contentType = contentTypeHeader.replace(
+        'application/x-java-object;type=java.lang.',
+        ''
+      );
+      return contentType as ContentType;
+    }
+
+    if (contentTypeHeader == 'application/json') {
+      return ContentType.JSON;
+    }
+
+    if (contentTypeHeader == 'application/xml') {
+      return ContentType.XML;
+    }
+
+    return ContentType.StringContentType;
+  }
+
+  /**
+   *
+   * @param protobufType
+   */
+  public static fromProtobufType(protobufType: string): ContentType {
+    let contentType;
+
+    switch (protobufType) {
+      case 'string':
+        contentType = ContentType.StringContentType;
+        break;
+      case 'float':
+        contentType = ContentType.FloatContentType;
+        break;
+      case 'double':
+        contentType = ContentType.DoubleContentType;
+        break;
+      case 'int32':
+      case 'uint32':
+      case 'sint32':
+      case 'fixed32':
+      case 'sfixed32':
+        contentType = ContentType.IntegerContentType;
+        break;
+      case 'int64':
+      case 'uint64':
+      case 'sint64':
+      case 'fixed64':
+      case 'sfixed64':
+        contentType = ContentType.LongContentType;
+        break;
+      case 'bool':
+        contentType = ContentType.BooleanContentType;
+        break;
+      default:
+        contentType = ContentType.StringContentType;
+    }
+    return contentType;
   }
 }
