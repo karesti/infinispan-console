@@ -1,8 +1,13 @@
 import {ContentType} from "@services/cacheConfigUtils";
 
-export class EncodingUtility {
+/**
+ * Maps between Content Types and HTTP headers to be sent to the
+ * REST API
+ */
+export class ContentTypeHeaderMapper {
+
   /**
-   * Calculate the key content type header value to send ot the REST API
+   * Calculates the key content type header value to send ot the REST API
    * @param contentType
    */
   public static fromContentType(contentType: ContentType): string {

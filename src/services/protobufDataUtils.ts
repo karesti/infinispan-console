@@ -1,7 +1,15 @@
 import {ContentType} from "@services/cacheConfigUtils";
 
-export class ProtobufDataTransformer {
+/**
+ * Protobuf data types utility methods
+ */
+export class ProtobufDataUtils {
 
+  /**
+   * Returns true if the content is a basic protobuf type
+   *
+   * @param protobufType
+   */
   public static isProtobufBasicType(protobufType: string | undefined): boolean {
     if (protobufType == undefined) {
       return false;
@@ -27,6 +35,11 @@ export class ProtobufDataTransformer {
     return false;
   }
 
+  /**
+   * Maps from protobuf to content type
+   *
+   * @param protobufType
+   */
   public static fromProtobufType(protobufType: string): ContentType {
     let contentType;
 

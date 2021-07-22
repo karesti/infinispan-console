@@ -1,12 +1,8 @@
-import { RestUtils } from './restUtils';
-import { Either, left, right } from './either';
-import {
-  CacheConfigUtils,
-  ContentType,
-  EncodingType,
-} from '@services/cacheConfigUtils';
-import { EncodingUtility } from '@services/encoding/encodingUtility';
-import { ProtobufDataTransformer } from '@services/encoding/protobufDataTransformer';
+import {RestUtils} from './restUtils';
+import {Either, left, right} from './either';
+import {CacheConfigUtils, ContentType, EncodingType,} from '@services/cacheConfigUtils';
+import {ContentTypeHeaderMapper} from '@services/contentTypeHeaderMapper';
+import {ProtobufDataUtils} from '@services/protobufDataUtils';
 
 /**
  * Cache Service calls Infinispan endpoints related to Caches
@@ -137,7 +133,7 @@ export class CacheService {
     let customHeaders = this.utils.createAuthenticatedHeader();
     customHeaders.append(
       'Content-Type',
-      EncodingUtility.fromContentType(contentType)
+      ContentTypeHeaderMapper.fromContentType(contentType)
     );
 
     const urlCreateCache =
@@ -235,12 +231,28 @@ export class CacheService {
 
     let keyContentTypeHeader;
     if (cacheEncoding.key == EncodingType.XML) {
-      keyContentTypeHeader = EncodingUtility.fromContentType(ContentType.XML);
+      keyContentTypeHeader = ContentTypeHeaderMapper.fromContentType(ContentType.XML);
+    }
+
+    if (cacheEncoding.key == EncodingType.JSON) {
+      keyContentTypeHeader = ContentTypeHeaderMapper.fromContentType(ContentType.JSON);
+    }
+
+    if (cacheEncoding.value == EncodingType.Protobuf) {
+      keyContentTypeHeader = ContentTypeHeaderMapper.fromContentType(keyContentType);
     }
 
     let contentTypeHeader;
     if (cacheEncoding.value == EncodingType.XML) {
-      contentTypeHeader = EncodingUtility.fromContentType(ContentType.XML);
+      contentTypeHeader = ContentTypeHeaderMapper.fromContentType(ContentType.XML);
+    }
+
+    if (cacheEncoding.value == EncodingType.JSON) {
+      contentTypeHeader = ContentTypeHeaderMapper.fromContentType(ContentType.JSON);
+    }
+
+    if (cacheEncoding.value == EncodingType.Protobuf) {
+      contentTypeHeader = ContentTypeHeaderMapper.fromContentType(valueContentType);
     }
 
     // if (valueContentType) {
@@ -356,16 +368,19 @@ export class CacheService {
             lastUsed: this.parseMetadataDate(entry.lastUsed),
             expires: this.parseMetadataDate(entry.expireTime),
           }
-      )
-    );
+      ));
   }
 
   private extractKey(key: string, keyEncoding: EncodingType): string {
+    if (keyEncoding == EncodingType.JSON) {
+      return JSON.stringify(key);
+    }
+
     if (keyEncoding == EncodingType.Protobuf) {
       const keyValue = key['_value'];
       if (
         CacheConfigUtils.isJSONObject(keyValue) &&
-        !ProtobufDataTransformer.isProtobufBasicType(key['_type'])
+        !ProtobufDataUtils.isProtobufBasicType(key['_type'])
       ) {
         return JSON.stringify(keyValue);
       }
@@ -380,6 +395,10 @@ export class CacheService {
       return value;
     }
 
+    if (encoding == EncodingType.JSON) {
+      return JSON.stringify(value);
+    }
+
     return JSON.stringify(value);
   }
 
@@ -389,8 +408,12 @@ export class CacheService {
   ): ContentType {
     if (encodingType == EncodingType.XML) {
       return ContentType.XML;
-    } else if (encodingType == EncodingType.Protobuf) {
-      return ProtobufDataTransformer.fromProtobufType(content['_type']);
+    }
+    if (encodingType == EncodingType.JSON) {
+      return ContentType.JSON;
+    }
+    if (encodingType == EncodingType.Protobuf) {
+      return ProtobufDataUtils.fromProtobufType(content['_type']);
     }
     return ContentType.StringContentType;
   }
@@ -410,13 +433,13 @@ export class CacheService {
   ): Promise<Either<ActionResponse, CacheEntry>> {
     let headers = this.utils.createAuthenticatedHeader();
     if (keyContentType) {
-      let keyContentTypeHeader = EncodingUtility.fromContentType(
+      let keyContentTypeHeader = ContentTypeHeaderMapper.fromContentType(
         keyContentType
       );
       headers.append('Key-Content-Type', keyContentTypeHeader);
       headers.append(
         'Content-Type',
-        EncodingUtility.fromContentType(ContentType.JSON)
+        ContentTypeHeaderMapper.fromContentType(ContentType.JSON)
       );
     }
     const getEntryUrl =
@@ -450,8 +473,8 @@ export class CacheService {
             const cacheControl = response.headers.get('Cache-Control');
             const etag = response.headers.get('Etag');
             return <CacheEntry>{
-              key: key,
-              value: value,
+              key: this.extractKey(key, encoding.key as EncodingType),
+              value: this.extractValue(value, encoding.value as EncodingType),
               keyContentType: keyContentType,
               valueContentType: valueContentType,
               timeToLive: this.parseMetadataNumber(timeToLive),
@@ -469,18 +492,16 @@ export class CacheService {
             };
           });
         }
-        throw response;
+
+        if(response.status == 404) {
+          throw `The entry key \' ${key} \' does not exist.`;
+        }
+        return response.text().then((text) => {
+          throw text;
+        });
       })
       .then((data) => right(data) as Either<ActionResponse, CacheEntry>)
       .catch((err) => {
-        if (err.status.valueOf() == 404) {
-          // Not Found is an error but a success action result
-          return left(<ActionResponse>{
-            message: 'The entry key ' + key + ' does not exist.',
-            success: true,
-          });
-        }
-
         return left(
           this.utils.mapError(err, 'An error occurred retrieving key ' + key)
         );
@@ -550,7 +571,7 @@ export class CacheService {
     keyContentType: ContentType
   ): Promise<ActionResponse> {
     let headers = this.utils.createAuthenticatedHeader();
-    let keyContentTypeHeader = EncodingUtility.fromContentType(keyContentType);
+    let keyContentTypeHeader = ContentTypeHeaderMapper.fromContentType(keyContentType);
     headers.append('Key-Content-Type', keyContentTypeHeader);
 
     const deleteUrl =

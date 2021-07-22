@@ -215,7 +215,13 @@ export class RestUtils {
     };
   }
 
-  private interpret(text: string, errorMessage: string): string {
+  private interpret(error: any | undefined, errorMessage: string): string {
+    if(!error) {
+      return errorMessage;
+    }
+
+    let text = JSON.stringify(error);
+
     if (text.includes("missing type id property '_type'")) {
       return "You are trying to write a JSON key or value that needs '_type' field in this cache.";
     }

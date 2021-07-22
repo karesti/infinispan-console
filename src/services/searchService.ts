@@ -1,5 +1,5 @@
-import { RestUtils } from './restUtils';
-import { Either, left, right } from './either';
+import {RestUtils} from './restUtils';
+import {Either} from './either';
 import displayUtils from '@services/displayUtils';
 
 /**
