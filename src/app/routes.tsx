@@ -16,6 +16,7 @@ import { ClusterStatus } from '@app/ClusterStatus/ClusterStatus';
 import { useDocumentTitle } from '@app/utils/useDocumentTitle';
 import { IndexManagement } from '@app/IndexManagement/IndexManagement';
 import { XSiteCache } from '@app/XSite/XSiteCache';
+import { XSiteCluster } from '@app/XSite/XSiteCluster';
 import { DetailCachePage } from '@app/Caches/DetailCachePage';
 
 let routeFocusTimer: number;
@@ -136,6 +137,14 @@ const routes: IAppRoute[] = [
     label: 'XSite Replication Cache',
     path: '/cache/:cacheName/backups',
     title: 'XSite management caches',
+    menu: false,
+  },
+  {
+    component: XSiteCluster,
+    exact: true,
+    label: 'XSite Replication Cache',
+    path: '/container/:cmName/backups',
+    title: 'XSite Cluster management',
     menu: false,
   },
   {

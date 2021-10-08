@@ -1,6 +1,7 @@
 import * as React from 'react';
 import {useState} from 'react';
 import {
+  Button, ButtonVariant,
   Card,
   CardBody,
   Divider,
@@ -30,6 +31,7 @@ import {useConnectedUser} from "@app/services/userManagementHook";
 import {ConsoleServices} from "@services/ConsoleServices";
 import {ConsoleACL} from "@services/securityService";
 import {RebalancingCacheManager} from "@app/Rebalancing/RebalancingCacheManager";
+import {Link} from "react-router-dom";
 
 const CacheManagers = () => {
   const { connectedUser } = useConnectedUser();
@@ -164,11 +166,29 @@ const CacheManagers = () => {
     if (!siteName || siteName == '') {
       return '';
     }
+    // Not admin display site name
+    if(!ConsoleServices.security().hasConsoleACL(ConsoleACL.ADMIN, connectedUser)) {
+      return (
+          <React.Fragment>
+            <Divider isVertical />
+            <FlexItem>{'Site: ' + siteName}</FlexItem>
+          </React.Fragment>
+        );
+    }
 
+    // Admin display link to site management cluster wide
     return (
       <React.Fragment>
         <Divider isVertical />
-        <FlexItem>{'Site: ' + siteName}</FlexItem>
+        <FlexItem>
+          <Link
+            to={{
+              pathname: 'container/' + encodeURIComponent(cm.name) + '/backups',
+            }}
+          >
+            <Button variant={ButtonVariant.link}>{siteName + ' site backups'}</Button>
+          </Link>
+        </FlexItem>
       </React.Fragment>
     );
   };

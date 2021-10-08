@@ -36,6 +36,32 @@ export class CrossSiteReplicationService {
   }
 
   /**
+   * Gets all the sites for a cache manager
+   *
+   * @param cacheName
+   */
+  public async sites(
+    cmName: string
+  ): Promise<Either<ActionResponse, XSite[]>> {
+    return this.utils.get(
+      this.endpoint +
+      '/cache-managers/' +
+      encodeURIComponent(cmName) +
+      '/x-site/backups/',
+      (data) =>
+        Object.keys(data).map(
+          (nodeName) => {
+            const status = data[nodeName];
+            if (status == 'mixed') {
+              return <XSite>{ name: nodeName, status: status, online: data[nodeName].online, offline: data[nodeName].offline }
+            }
+            return <XSite>{ name: nodeName, status: status }
+          }
+        )
+    );
+  }
+
+  /**
    * Gets the status for a cache and site
    *
    * @param cacheName

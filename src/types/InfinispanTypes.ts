@@ -172,7 +172,9 @@ interface SiteNode {
 
 interface XSite {
   name: string;
-  status: string;
+  status: 'online' | 'offline' | 'mixed';
+  online?:string[];
+  offline?:string[];
 }
 
 interface CacheAcl {
