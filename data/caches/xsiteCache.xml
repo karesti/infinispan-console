@@ -1,6 +1,7 @@
 <infinispan>
   <cache-container>
     <replicated-cache name="xsiteCache3" statistics="true">
+      <partition-handling when-split="DENY_READ_WRITES" merge-policy="PREFERRED_ALWAYS"/>
       <encoding media-type="application/x-protostream"/>
       <backups>
         <backup site="NYC" strategy="SYNC" failure-policy="WARN" timeout="12003">
