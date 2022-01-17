@@ -27,7 +27,7 @@ export class CacheService {
     cacheName: string
   ): Promise<Either<ActionResponse, DetailedInfinispanCache>> {
     return this.fetchCaller.get(
-      this.endpoint + '/caches/' + encodeURIComponent(cacheName),
+      this.endpoint + '/cachess/' + encodeURIComponent(cacheName),
       (data) => {
         let cacheStats;
         if (data['stats']) {
