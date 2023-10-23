@@ -179,6 +179,33 @@ export class SecurityService {
   }
 
   /**
+   * Retrieve access groups
+   */
+  public async getAccessGroups(): Promise<Either<ActionResponse, AccessGroup[]>> {
+    return this.fetchCaller.get(this.endpoint + '/principals-detail', (data) =>
+      Object.keys(data).map(
+        (group) =>
+          <AccessGroup>{
+            name: group,
+            roles: data[group]
+          }
+      )
+    );
+  }
+
+  /**
+   * Grants or denys access to a group with roles
+   */
+  public async grantOrDenyAccess(action: string, groupName: string, roles : string[], messageOk: string, messageError: string) {
+    const urlParams = '?action=' + action + '&' + roles.map((r) => 'role=' + r).join('&');
+    return this.fetchCaller.put({
+      url: this.endpoint + '/roles/' + groupName + urlParams,
+      successMessage: messageOk,
+      errorMessage: messageError
+    });
+  }
+
+  /**
    * Created a new role
    * @param roleName
    * @param roleDescription

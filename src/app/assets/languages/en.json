@@ -5,7 +5,8 @@
     "encoding-docs-link": "https://infinispan.org/docs/stable/titles/encoding/encoding.html",
     "persistence-docs-link": "https://infinispan.org/docs/stable/titles/configuring/configuring.html#persistence",
     "configuration-docs-link": "https://infinispan.org/docs/stable/titles/configuring/configuring.html",
-    "default-roles-docs-link": "https://infinispan.org/docs/stable/titles/server/server.html#default-user-roles_server-getting-started"
+    "default-roles-docs-link": "https://infinispan.org/docs/stable/titles/server/server.html#default-user-roles_server-getting-started",
+    "default-access-docs-link": "https://infinispan.org/docs/stable/titles/server/server.html#granting-roles-to-users_server-getting-started"
   },
   "layout": {
     "console-name": "Server Management Console",
@@ -853,6 +854,7 @@
       "no-filtered-roles-body": "No roles match your search criteria.",
       "roles-hint-link": "Learn more in the {{brandname}} documentation",
       "loading-roles": "Loading roles",
+      "loading-roles-error": "Unexpected server error loading roles",
       "create-button": "Create role",
       "delete-action": "Delete",
       "no-roles-status": "No roles",
@@ -886,6 +888,20 @@
       "modal-delete-description-2": "You can always recreate the role.",
       "delete-success": "Role {{name}} has been deleted",
       "delete-error": "Unexpected error deleting the role {{name}}"
+    },
+    "access": {
+      "name": "Name",
+      "roles": "Roles",
+      "loading-access": "Loading access mappings",
+      "loading-access-error": "Unexpected server error loading access mappings",
+      "no-access-status": "No access mappings",
+      "no-access-found": "No access mapping found",
+      "no-access-body": "You can grant a role to manage access to {{brandname}} Server administration.",
+      "no-filtered-access-body": "No access mapping match your search criteria.",
+      "search-placeholder": "Find by name",
+      "access-name": "Access name",
+      "access-name-tooltip": "blablabla.",
+      "access-hint-link": "Learn more in the {{brandname}} documentation"
     }
   }
 }

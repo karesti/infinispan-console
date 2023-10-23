@@ -500,3 +500,8 @@ interface Role {
   implicit: boolean;
   permissions: string[];
 }
+
+interface AccessGroup {
+  name: string;
+  roles: string[];
+}

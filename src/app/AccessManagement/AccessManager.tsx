@@ -1,5 +1,5 @@
 import * as React from 'react';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import {
   Card,
   CardBody,
@@ -14,6 +14,7 @@ import {
 } from '@patternfly/react-core';
 import { useTranslation } from 'react-i18next';
 import { RoleTableDisplay } from '@app/AccessManagement/RoleTableDisplay';
+import { AccessManagementTableDisplay } from '@app/AccessManagement/AccessManagementTableDisplay';
 
 const AccessManager = () => {
   const { t } = useTranslation();
@@ -26,14 +27,21 @@ const AccessManager = () => {
     key: string;
     name: string;
   }
-  const handleTabClick = (nav) => {
-    const tabIndex = nav.itemId;
-    setActiveTabKey(tabIndex);
-    setShowRoles(tabIndex == '0');
-    setShowAccessControl(tabIndex == '1');
+
+  useEffect(() => {
+    setShowRoles(activeTabKey === '0');
+    setShowAccessControl(activeTabKey === '1');
+  }, [activeTabKey]);
+
+  const handleTabClick = (ev, nav) => {
+    setActiveTabKey(nav.itemId);
   };
+
   const buildTabs = () => {
-    const tabs: AccessTab[] = [{ name: t('access-management.tab-roles'), key: '0' }];
+    const tabs: AccessTab[] = [
+      { name: t('access-management.tab-roles'), key: '0' },
+      { name: t('access-management.tab-access-control'), key: '1' }
+    ];
 
     return (
       <Nav data-cy="navigationTabs" onSelect={handleTabClick} variant={'tertiary'}>
@@ -57,7 +65,7 @@ const AccessManager = () => {
     <Card>
       <CardBody>
         {showRoles && <RoleTableDisplay />}
-        {showAccessControl && <div>Access Control</div>}
+        {showAccessControl && <AccessManagementTableDisplay/>}
       </CardBody>
     </Card>
   );
