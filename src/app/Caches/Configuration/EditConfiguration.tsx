@@ -12,6 +12,7 @@ import { TableErrorState } from '@app/Common/TableErrorState';
 import { TableLoadingState } from '@app/Common/TableLoadingState';
 import { IndexedConfigEdition } from '@app/Caches/Configuration/Features/IndexedConfigEdition';
 import { SecurityConfigEdition } from '@app/Caches/Configuration/Features/SecurityConfigEdition';
+import { TransactionalConfigEdition } from '@app/Caches/Configuration/Features/TransactionalConfigEdition';
 
 interface EditConfigTab {
   key: string;
@@ -43,6 +44,13 @@ const EditConfiguration = () => {
     }
     if (cache.features?.secured) {
       cacheConfigTabs.push({ name: t('caches.edit-configuration.tab-secured'), key: 'secured', eventKey: 3 });
+    }
+    if (cache.features?.transactional) {
+      cacheConfigTabs.push({
+        name: t('caches.edit-configuration.tab-transactional'),
+        key: 'transactional',
+        eventKey: 4
+      });
     }
     setTabs(cacheConfigTabs);
   }, [cache]);
@@ -83,6 +91,7 @@ const EditConfiguration = () => {
             {activeTabKey == 1 && <BoundedConfigEdition />}
             {activeTabKey == 2 && <IndexedConfigEdition />}
             {activeTabKey == 3 && <SecurityConfigEdition />}
+            {activeTabKey == 4 && <TransactionalConfigEdition />}
           </CardBody>
         </Card>
       </React.Fragment>

@@ -563,4 +563,6 @@ interface EditableConfig {
   memoryMaxCount?: number;
   indexedEntities: string[];
   securityAuthorizationRoles: string[];
+  transactionStopTimeout: string;
+  transactionSinglePhaseAutocommit: boolean;
 }

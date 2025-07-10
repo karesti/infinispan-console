@@ -783,7 +783,14 @@
       "security-description": "Update roles in this cache and grant or deny access to {{brandname}} cache operations.",
       "security-authz-roles": "Roles",
       "security-authz-roles-helper-invalid": "You must add at least one role.",
-      "security-config-error": "Unable to upgrade roles in this cache: {{error}}"
+      "security-config-error": "Unable to upgrade roles in this cache: {{error}}",
+      "tab-transactional": "Transactions",
+      "transaction-title": "Transactions settings",
+      "transaction-single-phase-autocommit-enable": "Single phase autocommit is enabled",
+      "transaction-single-phase-autocommit-disable": "Single phase autocommit is disabled",
+      "transaction-stop-timeout": "Stop timeout",
+      "transaction-stop-timeout-tooltip": "tooltip",
+      "transaction-stop-timeout-helper-invalid": "stop timeout oo"
     },
     "backups": {
       "title": "Backups management",

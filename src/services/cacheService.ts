@@ -7,7 +7,9 @@ import {
   CONF_MUTABLE_INDEXING_INDEXED_ENTITIES,
   CONF_MUTABLE_MEMORY_MAX_COUNT,
   CONF_MUTABLE_MEMORY_MAX_SIZE,
-  CONF_MUTABLE_SECURITY_AUTHORIZATION_ROLES
+  CONF_MUTABLE_SECURITY_AUTHORIZATION_ROLES,
+  CONF_MUTABLE_TRANSACTION_SINGLE_PHASE_AUTOCOMMIT,
+  CONF_MUTABLE_TRANSACTION_STOP_TIMEOUT
 } from '@services/cacheConfigUtils';
 import { ContentTypeHeaderMapper } from '@services/contentTypeHeaderMapper';
 import { CacheRequestResponseMapper } from '@services/cacheRequestResponseMapper';
@@ -708,7 +710,9 @@ export class CacheService {
         memoryMaxSize: this.extractValueOrUndefined(CONF_MUTABLE_MEMORY_MAX_SIZE, data),
         memoryMaxCount: this.extractValueOrUndefined(CONF_MUTABLE_MEMORY_MAX_COUNT, data),
         indexedEntities: this.extractValueOrEmpty(CONF_MUTABLE_INDEXING_INDEXED_ENTITIES, data),
-        securityAuthorizationRoles: this.extractValueOrEmpty(CONF_MUTABLE_SECURITY_AUTHORIZATION_ROLES, data)
+        securityAuthorizationRoles: this.extractValueOrEmpty(CONF_MUTABLE_SECURITY_AUTHORIZATION_ROLES, data),
+        transactionStopTimeout: data[CONF_MUTABLE_TRANSACTION_STOP_TIMEOUT].value,
+        transactionSinglePhaseAutocommit: data[CONF_MUTABLE_TRANSACTION_SINGLE_PHASE_AUTOCOMMIT].value
       };
     });
   }
