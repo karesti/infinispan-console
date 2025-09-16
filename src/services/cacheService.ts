@@ -2,6 +2,9 @@ import { FetchCaller } from './fetchCaller';
 import { Either, left, right } from './either';
 import {
   CacheConfigUtils,
+  CONF_MUTABLE_ADVANCED_CLUSTERING_REMOTE_TIMEOUT,
+  CONF_MUTABLE_ADVANCED_JMX_STATISTICS,
+  CONF_MUTABLE_ADVANCED_LOCKING_ACQUIRE_TIMEOUT,
   CONF_MUTABLE_EXPIRATION_LIFESPAN,
   CONF_MUTABLE_EXPIRATION_MAXIDLE,
   CONF_MUTABLE_INDEXING_INDEXED_ENTITIES,
@@ -9,7 +12,7 @@ import {
   CONF_MUTABLE_MEMORY_MAX_SIZE,
   CONF_MUTABLE_SECURITY_AUTHORIZATION_ROLES,
   CONF_MUTABLE_TRACING_CATEGORIES,
-  CONF_MUTABLE_TRACING_ENABLED
+  CONF_MUTABLE_TRACING_ENABLED,
 } from '@services/cacheConfigUtils';
 import { ContentTypeHeaderMapper } from '@services/contentTypeHeaderMapper';
 import { CacheRequestResponseMapper } from '@services/cacheRequestResponseMapper';
@@ -713,7 +716,10 @@ export class CacheService {
         indexedEntities: this.extractValueOrEmpty(CONF_MUTABLE_INDEXING_INDEXED_ENTITIES, data),
         securityAuthorizationRoles: this.extractValueOrEmpty(CONF_MUTABLE_SECURITY_AUTHORIZATION_ROLES, data),
         tracingEnabled: this.extractValueOrFalse(CONF_MUTABLE_TRACING_ENABLED, data),
-        tracingCategories: this.extractValueOrEmpty(CONF_MUTABLE_TRACING_CATEGORIES, data)
+        tracingCategories: this.extractValueOrEmpty(CONF_MUTABLE_TRACING_CATEGORIES, data),
+        jmxEnabled: this.extractValueOrFalse(CONF_MUTABLE_ADVANCED_JMX_STATISTICS, data),
+        clusterRemoteTimeout: data[CONF_MUTABLE_ADVANCED_CLUSTERING_REMOTE_TIMEOUT].value,
+        lockTimeout: data[CONF_MUTABLE_ADVANCED_LOCKING_ACQUIRE_TIMEOUT].value
       };
     });
   }

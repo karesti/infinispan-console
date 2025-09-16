@@ -13,6 +13,7 @@ import { TableLoadingState } from '@app/Common/TableLoadingState';
 import { IndexedConfigEdition } from '@app/Caches/Configuration/Features/IndexedConfigEdition';
 import { SecurityConfigEdition } from '@app/Caches/Configuration/Features/SecurityConfigEdition';
 import { TracingConfigEdition } from '@app/Caches/Configuration/Features/TracingConfigEdition';
+import AdvancedConfigEdition from '@app/Caches/Configuration/Features/AdvancedConfigEdition';
 
 interface EditConfigTab {
   key: string;
@@ -49,6 +50,8 @@ const EditConfiguration = () => {
     if (cacheManager.tracing_enabled) {
       cacheConfigTabs.push({ name: t('caches.edit-configuration.tab-tracing'), key: 'tracing', eventKey: 4 });
     }
+    // Advanced is always displayed
+    cacheConfigTabs.push({ name: t('caches.edit-configuration.tab-advanced'), key: 'advanced', eventKey: 5 });
     setTabs(cacheConfigTabs);
   }, [cache]);
 
@@ -89,6 +92,7 @@ const EditConfiguration = () => {
             {activeTabKey == 2 && <IndexedConfigEdition />}
             {activeTabKey == 3 && <SecurityConfigEdition />}
             {activeTabKey == 4 && <TracingConfigEdition />}
+            {activeTabKey == 5 && <AdvancedConfigEdition />}
           </CardBody>
         </Card>
       </React.Fragment>

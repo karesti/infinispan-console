@@ -565,4 +565,6 @@ interface EditableConfig {
   securityAuthorizationRoles: string[];
   tracingEnabled: boolean;
   tracingCategories: string[];
+  jmxEnabled: boolean;
+  lockTimeout: string;
 }

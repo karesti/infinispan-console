@@ -22,6 +22,9 @@ export const CONF_MUTABLE_INDEXING_INDEXED_ENTITIES = 'indexing.indexed-entities
 export const CONF_MUTABLE_SECURITY_AUTHORIZATION_ROLES = 'security.authorization.roles';
 export const CONF_MUTABLE_TRACING_ENABLED = 'tracing.enabled';
 export const CONF_MUTABLE_TRACING_CATEGORIES = 'tracing.categories';
+export const CONF_MUTABLE_ADVANCED_JMX_STATISTICS = 'jmx-statistics.statistics';
+export const CONF_MUTABLE_ADVANCED_CLUSTERING_REMOTE_TIMEOUT = 'clustering.remote-timeout';
+export const CONF_MUTABLE_ADVANCED_LOCKING_ACQUIRE_TIMEOUT = 'locking.acquire-timeout';
 
 /**
  * Utility class to map cache configuration
