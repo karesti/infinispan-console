@@ -32,6 +32,7 @@ import { useAppInitState, useConnectedUser } from '@app/services/userManagementH
 import { useFetchVersion } from '@app/services/serverHook';
 import { aboutLink, apacheLicenseLink, blogLink, hotRodClientsLink, tutorialsLink } from '@app/utils/links';
 import './Welcome.css';
+import { ExternalLinkButton } from '@patternfly/react-component-groups';
 
 const Welcome = () => {
   const { init } = useAppInitState();
@@ -104,6 +105,14 @@ const Welcome = () => {
     );
   };
 
+  const buildSwaggerUIButton = () => {
+    return (
+      <ExternalLinkButton href={ConsoleServices.swaggerUi()} size="lg" variant="warning">
+        {t('welcome-page.open-swagger-ui')}
+      </ExternalLinkButton>
+    );
+  };
+
   const DetailSection = (
     <Stack className="detail-section">
       <StackItem>
@@ -143,7 +152,12 @@ const Welcome = () => {
           </a>
         </Content>
       </StackItem>
-      <StackItem>{buildConsoleButton()}</StackItem>
+      <StackItem>
+        <Flex>
+          <FlexItem>{buildConsoleButton()}</FlexItem>
+          <FlexItem>{buildSwaggerUIButton()}</FlexItem>
+        </Flex>
+      </StackItem>
     </Stack>
   );
 

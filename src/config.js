@@ -1,1 +1,3 @@
-window.INFINISPAN_CONFIG = { restContextPath: '{{INFINISPAN_REST_CONTEXT_PATH}}' };
+window.INFINISPAN_CONFIG = {
+  restContextPath: '{{INFINISPAN_REST_CONTEXT_PATH}}'
+};

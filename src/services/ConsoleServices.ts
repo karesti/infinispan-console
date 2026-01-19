@@ -55,6 +55,20 @@ export class ConsoleServices {
     }
   }
 
+  public static swaggerUi(): string {
+    const swaggerUi = '/swagger-ui';
+    if (ConsoleServices.isDevMode()) {
+      if (!process.env.INFINISPAN_SERVER_URL) {
+        return 'http://localhost:11222' + swaggerUi;
+      } else {
+        return process.env.INFINISPAN_SERVER_URL + swaggerUi;
+      }
+    } else {
+      const x = window as any;
+      return window.location.origin.toString() + swaggerUi;
+    }
+  }
+
   public static landing(): string {
     if (ConsoleServices.isDevMode()) {
       return 'http://localhost:9000/console/';

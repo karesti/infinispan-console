@@ -279,6 +279,7 @@ const AppLayout: React.FunctionComponent<IAppLayout> = ({ children }) => {
               </NavItem>
             )
         )}
+        <NavItem onClick={() => window.open(ConsoleServices.swaggerUi(), '_blank')}>{t('layout.swagger-ui')}</NavItem>
       </NavList>
     </Nav>
   );
